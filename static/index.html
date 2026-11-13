@@ -14,10 +14,10 @@
     }
   </style>
 </head>
-<body class="bg-neutral-50 text-neutral-900 antialiased min-h-screen flex items-center justify-center p-6">
-  <main class="w-full max-w-xl bg-white border border-neutral-200 rounded-xl p-8 shadow-sm">
+<body class="bg-orange-50/60 text-neutral-900 antialiased min-h-screen flex items-center justify-center p-6">
+  <main class="w-full max-w-xl bg-white border border-orange-200 rounded-xl p-8 shadow-sm">
     <div class="space-y-1.5 mb-6">
-      <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">System Foundation</p>
+      <p class="text-xs font-semibold uppercase tracking-wider text-orange-600">System Foundation</p>
       <h1 class="text-2xl font-semibold tracking-tight text-neutral-900">Application Ready</h1>
       <p class="text-sm text-neutral-600">
         Verify live backend, SQLite, and Supabase connections before building tomorrow's solution.
@@ -25,13 +25,13 @@
     </div>
 
     <!-- Manual On-Click Tabs -->
-    <div class="flex border-b border-neutral-200 mb-6" role="tablist">
+    <div class="flex border-b border-orange-100 mb-6" role="tablist">
       <button
         id="tab-diagnostics"
         type="button"
         role="tab"
         aria-selected="true"
-        class="px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
       >
         Connection Diagnostics
       </button>
@@ -40,7 +40,7 @@
         type="button"
         role="tab"
         aria-selected="false"
-        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px"
       >
         SQLite Write Test
       </button>
@@ -48,29 +48,29 @@
 
     <!-- Panel 1: Connection Diagnostics -->
     <section id="panel-diagnostics" class="space-y-4">
-      <div class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg px-4">
+      <div class="divide-y divide-orange-100 border border-orange-200 rounded-lg px-4 bg-orange-50/30">
         <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-500">FastAPI Backend</span>
-          <span id="status-backend" class="font-medium text-neutral-800">Checking...</span>
+          <span class="text-neutral-600">FastAPI Backend</span>
+          <span id="status-backend" class="font-medium text-neutral-900">Checking...</span>
         </div>
         <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-500">SQLite Persistence</span>
-          <span id="status-sqlite" class="font-medium text-neutral-800">Checking...</span>
+          <span class="text-neutral-600">SQLite Persistence</span>
+          <span id="status-sqlite" class="font-medium text-neutral-900">Checking...</span>
         </div>
         <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-500">Supabase Project</span>
-          <span id="status-supabase" class="font-medium text-neutral-800">Checking...</span>
+          <span class="text-neutral-600">Supabase Project</span>
+          <span id="status-supabase" class="font-medium text-neutral-900">Checking...</span>
         </div>
         <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-500">Environment</span>
-          <span id="status-env" class="font-medium text-neutral-800">-</span>
+          <span class="text-neutral-600">Environment</span>
+          <span id="status-env" class="font-medium text-orange-700">-</span>
         </div>
       </div>
 
       <button
         id="run-diagnostics-btn"
         type="button"
-        class="w-full px-4 py-2.5 text-sm font-medium text-neutral-900 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg transition-colors"
+        class="w-full px-4 py-2.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
       >
         Run Connection Check
       </button>
@@ -85,28 +85,28 @@
           maxlength="200"
           required
           placeholder="Enter a short test message..."
-          class="flex-1 px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:border-neutral-600"
+          class="flex-1 px-3 py-2 text-sm border border-orange-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
         />
         <button
           type="submit"
-          class="px-4 py-2 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors"
+          class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
         >
           Save Record
         </button>
       </form>
 
       <div class="flex items-center justify-between">
-        <span class="text-xs font-medium uppercase tracking-wider text-neutral-500">Recent SQLite Records</span>
+        <span class="text-xs font-medium uppercase tracking-wider text-orange-700">Recent SQLite Records</span>
         <button
           id="refresh-notes-btn"
           type="button"
-          class="text-xs font-medium text-neutral-600 hover:text-neutral-900"
+          class="text-xs font-medium text-orange-600 hover:text-orange-800"
         >
           Refresh
         </button>
       </div>
 
-      <ul id="notes-list" class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg px-4 text-sm text-neutral-700">
+      <ul id="notes-list" class="divide-y divide-orange-100 border border-orange-200 rounded-lg px-4 text-sm text-neutral-700 bg-orange-50/30">
         <li class="py-3 text-neutral-400">No records loaded yet.</li>
       </ul>
     </section>
@@ -138,12 +138,12 @@
       tabPersistence.setAttribute("aria-selected", String(!isDiag));
 
       tabDiagnostics.className = isDiag
-        ? "px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
-        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px";
+        ? "px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
+        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px";
 
       tabPersistence.className = !isDiag
-        ? "px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
-        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px";
+        ? "px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
+        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px";
     }
 
     async function runDiagnostics() {
@@ -199,7 +199,7 @@
           textSpan.className = "text-neutral-800 truncate";
           textSpan.textContent = item.note;
           const idSpan = document.createElement("span");
-          idSpan.className = "text-xs text-neutral-400 shrink-0";
+          idSpan.className = "text-xs text-orange-600 font-medium shrink-0";
           idSpan.textContent = "#" + item.id;
           li.appendChild(textSpan);
           li.appendChild(idSpan);

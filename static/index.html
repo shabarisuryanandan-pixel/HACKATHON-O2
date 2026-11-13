@@ -15,58 +15,224 @@
   </style>
 </head>
 <body class="bg-neutral-50 text-neutral-900 antialiased min-h-screen flex items-center justify-center p-6">
-  <main class="w-full max-w-lg bg-white border border-neutral-200 rounded-xl p-8 shadow-sm">
-    <div class="space-y-2 mb-6">
+  <main class="w-full max-w-xl bg-white border border-neutral-200 rounded-xl p-8 shadow-sm">
+    <div class="space-y-1.5 mb-6">
       <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">System Foundation</p>
       <h1 class="text-2xl font-semibold tracking-tight text-neutral-900">Application Ready</h1>
       <p class="text-sm text-neutral-600">
-        Base FastAPI service is running. Visual theme and domain modules will be configured once the problem statement is released.
+        Verify live backend, SQLite, and Supabase connections before building tomorrow's solution.
       </p>
     </div>
 
-    <div class="border-t border-neutral-100 pt-5 space-y-4">
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-neutral-500">Service Status</span>
-        <span id="health-status" class="font-medium text-neutral-800">Not checked</span>
-      </div>
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-neutral-500">Database</span>
-        <span id="db-status" class="font-medium text-neutral-800">Pending</span>
+    <!-- Manual On-Click Tabs -->
+    <div class="flex border-b border-neutral-200 mb-6" role="tablist">
+      <button
+        id="tab-diagnostics"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
+      >
+        Connection Diagnostics
+      </button>
+      <button
+        id="tab-persistence"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px"
+      >
+        SQLite Write Test
+      </button>
+    </div>
+
+    <!-- Panel 1: Connection Diagnostics -->
+    <section id="panel-diagnostics" class="space-y-4">
+      <div class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg px-4">
+        <div class="py-3 flex items-center justify-between text-sm">
+          <span class="text-neutral-500">FastAPI Backend</span>
+          <span id="status-backend" class="font-medium text-neutral-800">Checking...</span>
+        </div>
+        <div class="py-3 flex items-center justify-between text-sm">
+          <span class="text-neutral-500">SQLite Persistence</span>
+          <span id="status-sqlite" class="font-medium text-neutral-800">Checking...</span>
+        </div>
+        <div class="py-3 flex items-center justify-between text-sm">
+          <span class="text-neutral-500">Supabase Project</span>
+          <span id="status-supabase" class="font-medium text-neutral-800">Checking...</span>
+        </div>
+        <div class="py-3 flex items-center justify-between text-sm">
+          <span class="text-neutral-500">Environment</span>
+          <span id="status-env" class="font-medium text-neutral-800">-</span>
+        </div>
       </div>
 
       <button
-        id="check-health-btn"
+        id="run-diagnostics-btn"
         type="button"
-        class="w-full mt-2 px-4 py-2.5 text-sm font-medium text-neutral-900 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg transition-colors"
+        class="w-full px-4 py-2.5 text-sm font-medium text-neutral-900 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg transition-colors"
       >
-        Verify Health Endpoint
+        Run Connection Check
       </button>
-    </div>
+    </section>
+
+    <!-- Panel 2: SQLite Write Test -->
+    <section id="panel-persistence" class="hidden space-y-4">
+      <form id="note-form" class="flex gap-2">
+        <input
+          id="note-input"
+          type="text"
+          maxlength="200"
+          required
+          placeholder="Enter a short test message..."
+          class="flex-1 px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:border-neutral-600"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors"
+        >
+          Save Record
+        </button>
+      </form>
+
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium uppercase tracking-wider text-neutral-500">Recent SQLite Records</span>
+        <button
+          id="refresh-notes-btn"
+          type="button"
+          class="text-xs font-medium text-neutral-600 hover:text-neutral-900"
+        >
+          Refresh
+        </button>
+      </div>
+
+      <ul id="notes-list" class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg px-4 text-sm text-neutral-700">
+        <li class="py-3 text-neutral-400">No records loaded yet.</li>
+      </ul>
+    </section>
   </main>
 
   <script>
-    const healthStatusEl = document.getElementById("health-status");
-    const dbStatusEl = document.getElementById("db-status");
-    const checkBtn = document.getElementById("check-health-btn");
+    const tabDiagnostics = document.getElementById("tab-diagnostics");
+    const tabPersistence = document.getElementById("tab-persistence");
+    const panelDiagnostics = document.getElementById("panel-diagnostics");
+    const panelPersistence = document.getElementById("panel-persistence");
 
-    async function checkHealth() {
-      healthStatusEl.textContent = "Checking...";
+    const statusBackend = document.getElementById("status-backend");
+    const statusSqlite = document.getElementById("status-sqlite");
+    const statusSupabase = document.getElementById("status-supabase");
+    const statusEnv = document.getElementById("status-env");
+    const runDiagnosticsBtn = document.getElementById("run-diagnostics-btn");
+
+    const noteForm = document.getElementById("note-form");
+    const noteInput = document.getElementById("note-input");
+    const notesList = document.getElementById("notes-list");
+    const refreshNotesBtn = document.getElementById("refresh-notes-btn");
+
+    function switchTab(activeTab) {
+      const isDiag = activeTab === "diagnostics";
+      panelDiagnostics.classList.toggle("hidden", !isDiag);
+      panelPersistence.classList.toggle("hidden", isDiag);
+
+      tabDiagnostics.setAttribute("aria-selected", String(isDiag));
+      tabPersistence.setAttribute("aria-selected", String(!isDiag));
+
+      tabDiagnostics.className = isDiag
+        ? "px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
+        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px";
+
+      tabPersistence.className = !isDiag
+        ? "px-4 py-2 text-sm font-medium border-b-2 border-neutral-900 text-neutral-900 -mb-px"
+        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-neutral-800 -mb-px";
+    }
+
+    async function runDiagnostics() {
+      statusBackend.textContent = "Checking...";
+      statusSqlite.textContent = "Checking...";
+      statusSupabase.textContent = "Checking...";
       try {
-        const res = await fetch("/health");
-        if (!res.ok) {
-          throw new Error("HTTP " + res.status);
-        }
+        const res = await fetch("/api/diagnostics");
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        healthStatusEl.textContent = data.status === "ok" ? "Online" : String(data.status);
-        dbStatusEl.textContent = data.supabase_configured ? "Configured" : "Not configured yet";
+
+        statusBackend.textContent = data.backend?.status === "ok" ? "Online" : "Error";
+        statusEnv.textContent = data.backend?.environment || "unknown";
+
+        if (data.sqlite?.connected) {
+          statusSqlite.textContent = "Connected (" + data.sqlite.record_count + " records)";
+        } else {
+          statusSqlite.textContent = "Disconnected";
+        }
+
+        if (data.supabase?.reachable) {
+          statusSupabase.textContent = "Connected (HTTP 200)";
+        } else if (data.supabase?.configured) {
+          statusSupabase.textContent = "Configured (Unreachable)";
+        } else {
+          statusSupabase.textContent = "Not configured";
+        }
       } catch (err) {
-        healthStatusEl.textContent = "Unavailable";
-        dbStatusEl.textContent = "Unknown";
+        statusBackend.textContent = "Unavailable";
+        statusSqlite.textContent = "Unknown";
+        statusSupabase.textContent = "Unknown";
       }
     }
 
-    checkBtn.addEventListener("click", checkHealth);
-    checkHealth();
+    async function loadNotes() {
+      try {
+        const res = await fetch("/api/notes");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const notes = data.notes || [];
+        notesList.innerHTML = "";
+        if (notes.length === 0) {
+          const li = document.createElement("li");
+          li.className = "py-3 text-neutral-400";
+          li.textContent = "No records saved yet.";
+          notesList.appendChild(li);
+          return;
+        }
+        notes.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "py-2.5 flex items-center justify-between gap-4";
+          const textSpan = document.createElement("span");
+          textSpan.className = "text-neutral-800 truncate";
+          textSpan.textContent = item.note;
+          const idSpan = document.createElement("span");
+          idSpan.className = "text-xs text-neutral-400 shrink-0";
+          idSpan.textContent = "#" + item.id;
+          li.appendChild(textSpan);
+          li.appendChild(idSpan);
+          notesList.appendChild(li);
+        });
+      } catch (err) {
+        notesList.innerHTML = '<li class="py-3 text-neutral-500">Failed to load records.</li>';
+      }
+    }
+
+    tabDiagnostics.addEventListener("click", () => switchTab("diagnostics"));
+    tabPersistence.addEventListener("click", () => {
+      switchTab("persistence");
+      loadNotes();
+    });
+
+    runDiagnosticsBtn.addEventListener("click", runDiagnostics);
+    refreshNotesBtn.addEventListener("click", loadNotes);
+
+    noteForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const noteText = noteInput.value.trim();
+      if (!noteText) return;
+      await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: noteText }),
+      });
+      noteInput.value = "";
+      await loadNotes();
+    });
+
+    runDiagnostics();
   </script>
 </body>
 </html>

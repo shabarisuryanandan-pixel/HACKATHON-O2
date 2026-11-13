@@ -25,6 +25,13 @@ class TestBaseRoutes(unittest.TestCase):
         self.assertIn("environment", payload)
         self.assertIn("supabase_configured", payload)
 
+    def test_health_db_returns_200(self) -> None:
+        response = self.client.get("/health/db")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("status", payload)
+        self.assertIn("supabase_connected", payload)
+
 
 if __name__ == "__main__":
     unittest.main()

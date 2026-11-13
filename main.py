@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -24,6 +26,15 @@ def is_supabase_configured() -> bool:
     return bool(url and key)
 
 
+def get_supabase_client() -> Optional[Client]:
+    """Create and return a Supabase client if credentials are configured."""
+    url = os.getenv("SUPABASE_URL", "").strip()
+    key = os.getenv("SUPABASE_KEY", "").strip()
+    if not url or not key:
+        return None
+    return create_client(url, key)
+
+
 @app.get("/")
 def read_root() -> FileResponse:
     """Serve the frontend entry page."""
@@ -38,3 +49,12 @@ def health_check() -> dict[str, object]:
         "environment": os.getenv("APP_ENV", "development"),
         "supabase_configured": is_supabase_configured(),
     }
+
+
+@app.get("/health/db")
+def database_health_check() -> dict[str, object]:
+    """Verify Supabase client initialization and configuration status."""
+    client = get_supabase_client()
+    if client is None:
+        return {"status": "unconfigured", "supabase_connected": False}
+    return {"status": "ok", "supabase_connected": True}

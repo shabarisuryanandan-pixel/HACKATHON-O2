@@ -877,10 +877,21 @@ def override_zone_state(zone_id: str, payload: ZoneOverrideRequest) -> dict[str,
             detail = f"Opened relief bypass for {zone['name']}. Public reroute broadcast active."
         elif action == "dismiss_alert":
             conn.execute(
-                "UPDATE zones SET citizen_reports = 0, manual_status = 'GREEN' WHERE zone_id = ?",
+                "DELETE FROM public_reports WHERE zone_id = ?",
                 (zone_id,),
             )
-            detail = f"Cleared alert at {zone['name']}."
+            conn.execute(
+                """
+                UPDATE zones
+                SET citizen_reports = 0,
+                    gps_headcount = CASE WHEN zone_id = 'madiwala_koramangala' THEN 520 ELSE gps_headcount END,
+                    camera_headcount = CASE WHEN zone_id = 'madiwala_koramangala' THEN 490 ELSE camera_headcount END,
+                    manual_status = 'GREEN'
+                WHERE zone_id = ?
+                """,
+                (zone_id,),
+            )
+            detail = f"Deleted photo notice and cleared alert at {zone['name']}."
         else:
             detail = f"Command action '{action}' recorded for {zone['name']}."
 

@@ -115,3 +115,18 @@ The system connects **ground-level public awareness** with **authority emergency
 - `POST /api/sensors/ingest` — Ingest updated camera count, GPS headcount, speed, and weather/event flags for a zone.
 - `POST /api/zones/{zone_id}/override` — Authority manual action (`acknowledge`, `dispatch`, `reroute`, `dismiss`).
 - `GET /api/analytics` — Time-series inflow/density data for Chart.js and recent audit log entries.
+
+
+---
+
+## 8. Judging Criteria Alignment Strategy (100 Marks)
+
+| Criterion | Marks | How CrowdGuard Wins Full Marks |
+| :--- | :---: | :--- |
+| **Problem Discovery and Research** | 15 | Ground the pitch in documented real-world failures: stadium/theatre stampedes (e.g., Chinnaswamy, Hyderabad Pushpa 2 crowd crush) and 40–60 minute urban choke points (e.g., Silk Board). Show the exact root causes: reactive CCTV monitoring, unwarned crowd inflow, and police units stuck in low-risk zones. |
+| **Opportunity Identification** | 15 | Highlight the missing link between **top-down city/venue sensors** and **bottom-up citizen awareness**. Existing maps only show traffic after a jam forms and do not warn pedestrian crowds or reallocate police units dynamically. |
+| **Innovation and Originality** | 20 | 1) **Pre-crisis predictive diversion** (predicts Red state 10–20 mins early via Net Inflow vs. Safe Capacity). 2) **Multi-signal corroboration** (GPS + Camera + 2–3 Citizen Reports) to eliminate false panic. 3) **Dynamic Police Reallocation** (moving idle units from Green entries to Red/Yellow hotspots). 4) **Road/Gate Width Geometry** + public construction/accident reporting. |
+| **Technical Depth and Architecture** | 20 | Clean, modular **FastAPI** backend with deterministic predictive scoring, parameterized **SQLite** + **Supabase** cloud persistence, **interactive SVG** zone/choke-point schematic, **Chart.js** inflow/density analytics, anti-spam rate limiting, privacy-safe zone-level aggregation (no personal tracking/face recognition), and automated `TestClient` verification. |
+| **Prototype Functionality** | 15 | Live, hosted web app on Render (`https://hackathon-o2.onrender.com`) where judges can test both the **Authority Command Dashboard** (Red/Yellow/Green triage, police unit reallocation, manual overrides) and the **Public Portal** (live reroute warnings + 15-second incident reporting + 1-click demo scenarios). |
+| **Scalability and Real-World Impact** | 10 | Zero-install QR/browser access for the public, open sensor ingestion API compatible with any existing CCTV headcount or traffic feed, lightweight payloads for congested event networks, and clear rollout path from single stadiums/junctions to city-wide police/fire command centers. |
+| **Presentation** | 5 | Crisp 3-minute narrative: Real Tragedy -> Root Cause -> Live Demo (Normal -> Surge Prediction -> Police Reallocation & Public Reroute -> False Alarm Dismissal) -> Privacy & Scalability takeaway. |

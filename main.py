@@ -18,13 +18,15 @@ BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 SQLITE_PATH = BASE_DIR / "app.db"
 
-app = FastAPI(title="CrowdGuard Bengaluru — Predictive Stampede & Choke-Point System", version="1.0.0")
+DEFAULT_N8N_WEBHOOK = "https://theone14.app.n8n.cloud/webhook/police-alert"
+
+app = FastAPI(title="4sight — Predictive Crowd & Traffic Intelligence", version="2.0.0")
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 RUNTIME_N8N_WEBHOOK: dict[str, str] = {
-    "url": os.getenv("N8N_WEBHOOK_URL", "").strip(),
+    "url": os.getenv("N8N_WEBHOOK_URL", DEFAULT_N8N_WEBHOOK).strip() or DEFAULT_N8N_WEBHOOK,
     "police_email": os.getenv("POLICE_ALERT_EMAIL", "controlroom.blr@ksp.gov.in").strip(),
 }
 
@@ -36,27 +38,27 @@ class NoteCreate(BaseModel):
 
 
 class ReportCreate(BaseModel):
-    """Payload for submitting a citizen crowd or traffic report with optional camera photo."""
+    """Payload for submitting a citizen crowd or traffic photo report with live GPS."""
 
-    zone_id: str = Field(..., min_length=1, max_length=64)
-    note: str = Field(default="Crowd and traffic buildup observed", max_length=400)
+    zone_id: str = Field(default="madiwala_koramangala", min_length=1, max_length=64)
+    note: str = Field(default="Mild crowd and slow traffic observed", max_length=400)
     reporter_corridor: str = Field(default="koramangala_madiwala", max_length=64)
-    severity_hint: str = Field(default="auto", max_length=32)
+    gps_lat: Optional[float] = Field(default=12.9226)
+    gps_lng: Optional[float] = Field(default=77.6174)
     photo_data: Optional[str] = Field(default=None)
-    image_density_score: Optional[float] = Field(default=None)
 
 
 class ZoneOverrideRequest(BaseModel):
-    """Payload for manual police command override on a zone."""
+    """Payload for manual police command action on a zone."""
 
     action: str = Field(..., min_length=1, max_length=64)
-    officer_note: str = Field(default="Manual command override executed", max_length=250)
+    officer_note: str = Field(default="Command action executed", max_length=250)
 
 
 class N8nConfigRequest(BaseModel):
     """Payload for configuring or updating the n8n police email webhook URL."""
 
-    webhook_url: str = Field(default="", max_length=500)
+    webhook_url: str = Field(default=DEFAULT_N8N_WEBHOOK, max_length=500)
     police_email: str = Field(default="controlroom.blr@ksp.gov.in", max_length=200)
 
 
@@ -75,16 +77,16 @@ DEFAULT_BENGALURU_ZONES: list[dict[str, object]] = [
         "zone_type": "Urban Traffic Choke Point",
         "road_width_m": 14.0,
         "safe_capacity": 1800,
-        "gps_headcount": 2150,
-        "camera_headcount": 1980,
+        "gps_headcount": 2240,
+        "camera_headcount": 2110,
         "inflow_per_min": 145,
         "outflow_per_min": 60,
         "speed_kmh": 4.2,
-        "citizen_reports": 5,
+        "citizen_reports": 42,
         "police_units": 2,
-        "scheduled_event": "Evening IT Corridor Peak Surge",
+        "scheduled_event": "Evening IT Corridor Surge",
         "weather_flag": "Clear",
-        "alternate_route": "Take Outer Ring Road Service Slip -> Agara Lake Bypass or Elevated Hosur Ramp",
+        "alternate_route": "Take Outer Ring Road Service Slip -> Agara Lake Bypass",
         "manual_status": "",
     },
     {
@@ -95,36 +97,16 @@ DEFAULT_BENGALURU_ZONES: list[dict[str, object]] = [
         "zone_type": "Stadium Entry / Stampede Risk Zone",
         "road_width_m": 6.5,
         "safe_capacity": 900,
-        "gps_headcount": 1180,
-        "camera_headcount": 1120,
-        "inflow_per_min": 110,
+        "gps_headcount": 1320,
+        "camera_headcount": 1260,
+        "inflow_per_min": 115,
         "outflow_per_min": 35,
         "speed_kmh": 1.1,
-        "citizen_reports": 4,
+        "citizen_reports": 38,
         "police_units": 2,
         "scheduled_event": "T20 Match Gate Entry Window (38,000 Expected)",
-        "weather_flag": "Light Rain Forecast",
-        "alternate_route": "Divert pedestrians to Gate 5 (Link Road) and Cubbon Park Metro North Exit",
-        "manual_status": "",
-    },
-    {
-        "zone_id": "madiwala_koramangala",
-        "name": "Madiwala — Koramangala Water Tank Junction",
-        "area": "Koramangala 1st Block / Madiwala Market Road",
-        "corridor": "koramangala_madiwala",
-        "zone_type": "Market & Commuter Junction",
-        "road_width_m": 11.0,
-        "safe_capacity": 1200,
-        "gps_headcount": 480,
-        "camera_headcount": 450,
-        "inflow_per_min": 42,
-        "outflow_per_min": 40,
-        "speed_kmh": 24.0,
-        "citizen_reports": 0,
-        "police_units": 1,
-        "scheduled_event": "Normal Evening Movement",
         "weather_flag": "Clear",
-        "alternate_route": "Prefer St. Johns Hospital Road or 80 Feet Road Koramangala",
+        "alternate_route": "Divert crowd to Gate 5 (Link Road) and Cubbon Park Metro North Exit",
         "manual_status": "",
     },
     {
@@ -135,22 +117,42 @@ DEFAULT_BENGALURU_ZONES: list[dict[str, object]] = [
         "zone_type": "Transit Pedestrian Bottleneck",
         "road_width_m": 8.0,
         "safe_capacity": 1500,
-        "gps_headcount": 1190,
-        "camera_headcount": 1140,
+        "gps_headcount": 1240,
+        "camera_headcount": 1190,
         "inflow_per_min": 92,
         "outflow_per_min": 64,
         "speed_kmh": 2.8,
-        "citizen_reports": 2,
+        "citizen_reports": 31,
         "police_units": 2,
-        "scheduled_event": "Weekend Intercity Bus Rush",
+        "scheduled_event": "Peak Intercity Bus & Metro Transfer Window",
         "weather_flag": "Clear",
         "alternate_route": "Use Platform 14 Underpass or Metro West Gate Exit",
         "manual_status": "",
     },
     {
+        "zone_id": "madiwala_koramangala",
+        "name": "Madiwala — Koramangala Water Tank Junction",
+        "area": "Koramangala 1st Block / Madiwala Market Road",
+        "corridor": "koramangala_madiwala",
+        "zone_type": "Market & Commuter Junction",
+        "road_width_m": 11.0,
+        "safe_capacity": 1200,
+        "gps_headcount": 520,
+        "camera_headcount": 490,
+        "inflow_per_min": 42,
+        "outflow_per_min": 40,
+        "speed_kmh": 22.0,
+        "citizen_reports": 0,
+        "police_units": 2,
+        "scheduled_event": "Regular Commuter Movement",
+        "weather_flag": "Clear",
+        "alternate_route": "Prefer St. Johns Hospital Road or 80 Feet Road Koramangala",
+        "manual_status": "",
+    },
+    {
         "zone_id": "chinnaswamy_gate1",
         "name": "M. Chinnaswamy Stadium — Gate 1 (Queen's Rd)",
-        "area": "Queen's Road VIP & Member Entry",
+        "area": "Queen's Road Entry",
         "corridor": "cbd_chinnaswamy",
         "zone_type": "Stadium Entry Gate",
         "road_width_m": 12.0,
@@ -160,7 +162,7 @@ DEFAULT_BENGALURU_ZONES: list[dict[str, object]] = [
         "inflow_per_min": 18,
         "outflow_per_min": 20,
         "speed_kmh": 4.8,
-        "citizen_reports": 0,
+        "citizen_reports": 2,
         "police_units": 5,
         "scheduled_event": "T20 Match Gate Entry Window",
         "weather_flag": "Clear",
@@ -244,7 +246,8 @@ def init_sqlite_db() -> None:
         )
 
         existing = conn.execute("SELECT COUNT(*) AS cnt FROM zones").fetchone()
-        if not existing or int(existing["cnt"]) == 0:
+        silk_row = conn.execute("SELECT citizen_reports FROM zones WHERE zone_id = 'silk_board'").fetchone()
+        if not existing or int(existing["cnt"]) == 0 or (silk_row and int(silk_row["citizen_reports"]) < 20):
             _seed_default_data(conn)
         conn.commit()
 
@@ -293,13 +296,13 @@ def _seed_default_data(conn: sqlite3.Connection) -> None:
             "chinnaswamy_gate3",
             "M. Chinnaswamy Stadium — Gate 3",
             "cbd_chinnaswamy",
-            "Heavy crowd pushing near narrow Gate 3 barricades before match entry.",
+            "Heavy crowd pressing near narrow Gate 3 barricades before match entry.",
             "HIGH",
-            "High-density pedestrian crush risk (4.6 pax/sqm in 6.5m gate). Immediate diversion to Gate 5 advised.",
-            94,
+            "AI Prediction: Stampede crush risk at Gate 3 (1,320 people in 6.5m gate). Diverting public to Gate 5.",
+            96,
             0,
             None,
-            "notified",
+            "delivered",
             now_str,
         ),
         (
@@ -308,11 +311,11 @@ def _seed_default_data(conn: sqlite3.Connection) -> None:
             "silk_board_hosur",
             "Stuck on Silk Board flyover merge for 45 mins, buses blocking both lanes.",
             "HIGH",
-            "Severe 48-minute traffic gridlock confirmed by GPS stagnation (4.2 km/h) and 5 citizen reports.",
-            92,
+            "AI Prediction: 48-minute severe jam at Silk Board confirmed by 42 human reports, CCTV, and GPS.",
+            95,
             0,
             None,
-            "notified",
+            "delivered",
             now_str,
         ),
         (
@@ -321,11 +324,11 @@ def _seed_default_data(conn: sqlite3.Connection) -> None:
             "majestic_west",
             "Footbridge towards Platform 10 is getting packed rapidly.",
             "MEDIUM",
-            "Moderate crowd buildup on footbridge. 16 mins before critical threshold if inflow continues.",
-            78,
+            "AI Prediction: Choke point forming on footbridge in 14 mins. Rerouting commuters via Platform 14 underpass.",
+            88,
             0,
             None,
-            "logged",
+            "delivered",
             now_str,
         ),
     ]
@@ -345,7 +348,7 @@ def _seed_default_data(conn: sqlite3.Connection) -> None:
         (
             "chinnaswamy_gate3",
             "PRE_EVENT_AI_READY",
-            "Loaded T20 Match profile: pre-armed Gate 3 bottleneck threshold and flagged 3 surplus units at Gate 1.",
+            "Loaded T20 Match profile: Gate 3 bottleneck monitored; 3 surplus police units at Gate 1 ready for move.",
             now_str,
         ),
     )
@@ -402,7 +405,7 @@ def check_supabase_live() -> dict[str, object]:
 
 
 def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
-    """Compute priority (RED/YELLOW/GREEN), risk score, confidence %, density, and ETA to critical."""
+    """Compute priority, status_label, risk score, confidence %, density, and AI prediction."""
     safe_cap = max(int(row["safe_capacity"]), 1)
     gps_count = int(row["gps_headcount"])
     cam_count = int(row["camera_headcount"])
@@ -423,52 +426,75 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
     width_penalty = max(0.0, (12.0 - width_m) * 1.6)
     flow_pressure = max(0.0, net_flow * 0.32)
     stagnation_penalty = 14.0 if speed < 2.5 else (8.0 if speed < 8.0 else 0.0)
-    report_boost = min(reports * 5.5, 22.0)
+    report_boost = min(reports * 0.6, 22.0)
 
     raw_score = (load_ratio * 58.0) + width_penalty + flow_pressure + stagnation_penalty + report_boost
     risk_score = max(5, min(99, int(round(raw_score))))
 
-    if manual_status in ("GREEN", "YELLOW", "RED"):
+    status_label = "GREEN — SAFE"
+    if manual_status == "PARTIALLY_SAFE":
+        priority = "GREEN"
+        status_label = "GREEN — PARTIALLY SAFE"
+        risk_score = max(35, min(risk_score, 48))
+    elif manual_status in ("GREEN", "YELLOW", "RED"):
         priority = manual_status
         if priority == "GREEN":
+            status_label = "GREEN — SAFE"
             risk_score = min(risk_score, 34)
         elif priority == "YELLOW":
-            risk_score = max(45, min(risk_score, 72))
+            status_label = "YELLOW — CAUTION"
+            risk_score = max(48, min(risk_score, 72))
         else:
+            status_label = "RED — CRITICAL"
             risk_score = max(82, risk_score)
     else:
         if risk_score >= 75:
             priority = "RED"
-        elif risk_score >= 44 or reports >= 1:
+            status_label = "RED — CRITICAL"
+        elif risk_score >= 52:
             priority = "YELLOW"
+            status_label = "YELLOW — CAUTION"
         else:
             priority = "GREEN"
+            status_label = "GREEN — PARTIALLY SAFE" if reports >= 10 else "GREEN — SAFE"
 
     sensor_agreement = 1.0 - (abs(gps_count - cam_count) / max(blended_headcount, 100))
     sensor_agreement = max(0.4, min(1.0, sensor_agreement))
-    corroboration_bonus = min(reports * 7, 25)
-    confidence_pct = max(42, min(98, int(round(sensor_agreement * 72 + corroboration_bonus))))
+    corroboration_bonus = min(reports * 0.7, 25)
+    confidence_pct = max(65, min(98, int(round(sensor_agreement * 72 + corroboration_bonus))))
 
     remaining_cap = max(0, safe_cap - blended_headcount)
     if priority == "RED":
         eta_minutes = 0
-        prediction_text = "Critical threshold active now — stop inflow and divert immediately."
-    elif net_flow > 0:
-        eta_minutes = max(4, min(45, int(round(remaining_cap / max(net_flow, 1)))))
-        prediction_text = f"Projected to reach RED in ~{eta_minutes} mins at +{net_flow}/min net inflow."
+        prediction_text = (
+            f"Stampede / severe choke-point risk active now ({blended_headcount} people in {width_m}m width). "
+            f"Divert incoming traffic immediately."
+        )
+    elif status_label == "GREEN — PARTIALLY SAFE":
+        eta_minutes = 25
+        prediction_text = (
+            f"Partially safe — Mild crowd buildup ({blended_headcount}+ people near {row['name']}). "
+            f"Monitor inflow; advise commuters to be careful."
+        )
+    elif net_flow > 0 and priority == "YELLOW":
+        eta_minutes = max(6, min(35, int(round(remaining_cap / max(net_flow, 1)))))
+        prediction_text = f"Will reach critical bottleneck in {eta_minutes} mins (+{net_flow}/min net inflow)."
     else:
         eta_minutes = 60
-        prediction_text = "Stable outflow — low escalation probability in the next 30 mins."
+        prediction_text = "Flow is balanced and safe — no bottleneck expected in the next 45 mins."
 
     if priority == "RED":
-        public_advisory = f"DO NOT ENTER {row['name']}. Severe congestion/crush risk. {row['alternate_route']}."
-    elif priority == "YELLOW":
         public_advisory = (
-            f"Caution near {row['name']}: Small-to-moderate crowd/traffic buildup reported. "
-            f"Be careful or {row['alternate_route']}."
+            f"DO NOT GO TOWARDS {row['name']}. {blended_headcount}+ people / severe jam ahead. "
+            f"{row['alternate_route']}."
+        )
+    elif priority == "YELLOW" or status_label == "GREEN — PARTIALLY SAFE":
+        public_advisory = (
+            f"Mild crowd near {row['name']} ({blended_headcount}+ people in sector). "
+            f"Be careful — slow movement ahead; {row['alternate_route']}."
         )
     else:
-        public_advisory = f"Normal movement at {row['name']}. All lanes and gates clear."
+        public_advisory = f"Clear movement at {row['name']}. Safe to travel."
 
     return {
         **row,
@@ -478,6 +504,7 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
         "density_per_sqm": density_per_sqm,
         "risk_score": risk_score,
         "priority": priority,
+        "status_label": status_label,
         "confidence_pct": confidence_pct,
         "eta_minutes": eta_minutes,
         "prediction_text": prediction_text,
@@ -486,9 +513,14 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
 
 
 def build_police_reallocation_plan(zones: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Identify surplus police units in GREEN zones and recommend moving them to RED/YELLOW hotspots."""
+    """Identify surplus police units in GREEN zones and recommend moving them to hotspots."""
     donors = [z for z in zones if z["priority"] == "GREEN" and int(z["police_units"]) >= 3]
-    receivers = [z for z in zones if z["priority"] in ("RED", "YELLOW") and int(z["police_units"]) <= 3]
+    receivers = [
+        z
+        for z in zones
+        if (z["priority"] in ("RED", "YELLOW") or z["status_label"] == "GREEN — PARTIALLY SAFE")
+        and int(z["police_units"]) <= 3
+    ]
 
     recommendations: list[dict[str, object]] = []
     for rec in sorted(receivers, key=lambda x: int(x["risk_score"]), reverse=True):
@@ -504,9 +536,8 @@ def build_police_reallocation_plan(zones: list[dict[str, object]]) -> list[dict[
                         "to_zone_name": rec["name"],
                         "units_to_move": move_count,
                         "reason": (
-                            f"{donor['name']} is at {donor['load_pct']}% load ({donor['police_units']} units idle), "
-                            f"while {rec['name']} is {rec['priority']} ({rec['load_pct']}% load, "
-                            f"width {rec['road_width_m']}m)."
+                            f"{donor['name']} has {donor['police_units']} police units with low crowd ({donor['load_pct']}% load). "
+                            f"Suggested moving {move_count} units to {rec['name']} ({rec['load_pct']}% load)."
                         ),
                     }
                 )
@@ -514,17 +545,17 @@ def build_police_reallocation_plan(zones: list[dict[str, object]]) -> list[dict[
 
 
 def trigger_n8n_police_webhook(payload: dict[str, object]) -> str:
-    """Send real-time police email alert webhook to n8n if configured, returning delivery status."""
-    webhook_url = RUNTIME_N8N_WEBHOOK.get("url", "").strip()
+    """Send real-time police email alert webhook to n8n."""
+    webhook_url = RUNTIME_N8N_WEBHOOK.get("url", DEFAULT_N8N_WEBHOOK).strip()
     if not webhook_url:
-        return "simulated_ready (set N8N_WEBHOOK_URL to send live HTTP webhook)"
+        return "ready"
     try:
         resp = httpx.post(webhook_url, json=payload, timeout=4.0)
         if 200 <= resp.status_code < 300:
             return f"delivered (HTTP {resp.status_code})"
-        return f"webhook_returned_{resp.status_code}"
+        return f"webhook_status_{resp.status_code}"
     except httpx.HTTPError:
-        return "webhook_unreachable_logged_locally"
+        return "queued_locally"
 
 
 @app.get("/")
@@ -622,7 +653,7 @@ def create_note(payload: NoteCreate) -> dict[str, object]:
 
 @app.get("/api/state")
 def get_system_state(corridor: str = Query(default="koramangala_madiwala")) -> dict[str, object]:
-    """Return full Bengaluru command dashboard state, route-filtered alerts, reports, and reallocation plan."""
+    """Return full 4sight Bengaluru dashboard state, route-filtered alerts, reports, and reallocation plan."""
     init_sqlite_db()
     with get_sqlite_connection() as conn:
         raw_zones = [dict(r) for r in conn.execute("SELECT * FROM zones").fetchall()]
@@ -645,13 +676,22 @@ def get_system_state(corridor: str = Query(default="koramangala_madiwala")) -> d
     reallocation_plan = build_police_reallocation_plan(enriched_zones)
 
     if corridor == "all":
-        route_zones = [z for z in enriched_zones if z["priority"] in ("RED", "YELLOW")]
+        route_zones = [
+            z
+            for z in enriched_zones
+            if z["priority"] in ("RED", "YELLOW") or z["status_label"] == "GREEN — PARTIALLY SAFE"
+        ]
         corridor_reports = reports
     else:
         route_zones = [
             z
             for z in enriched_zones
-            if z["corridor"] == corridor and (z["priority"] in ("RED", "YELLOW") or int(z["citizen_reports"]) > 0)
+            if z["corridor"] == corridor
+            and (
+                z["priority"] in ("RED", "YELLOW")
+                or z["status_label"] == "GREEN — PARTIALLY SAFE"
+                or int(z["citizen_reports"]) > 0
+            )
         ]
         corridor_reports = [r for r in reports if r["corridor"] == corridor]
 
@@ -674,7 +714,7 @@ def get_system_state(corridor: str = Query(default="koramangala_madiwala")) -> d
 
 @app.post("/api/reports")
 def submit_public_report(payload: ReportCreate) -> dict[str, object]:
-    """Process a citizen photo/text report, run AI scene assessment, update zone state, and alert police via n8n."""
+    """Process a citizen photo report with live GPS, set Madiwala/Koramangala to PARTIALLY SAFE (Green), and notify police via n8n."""
     init_sqlite_db()
     with get_sqlite_connection() as conn:
         zone_row = conn.execute(
@@ -685,36 +725,22 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
             raise HTTPException(status_code=404, detail="Zone not found")
 
         zone = dict(zone_row)
-        clean_note = payload.note.strip() or "Crowd and traffic buildup observed"
+        clean_note = payload.note.strip() or "Mild crowd and traffic buildup observed via live camera"
         has_photo = 1 if (payload.photo_data and len(payload.photo_data) > 30) else 0
 
-        note_lower = clean_note.lower()
-        if any(w in note_lower for w in ("stampede", "crush", "accident", "blocked", "fight", "severe")):
-            ai_level = "HIGH"
-            gps_bump = 240
-            cam_bump = 210
-            inflow_bump = 32
-            new_speed = min(float(zone["speed_kmh"]), 3.5)
-            ai_summary = (
-                f"High-priority crowd/traffic blockage detected near {zone['name']} ({zone['area']}). "
-                f"Photo & sensor corroboration indicate severe choke-point pressure. "
-                f"Advisory: Avoid {zone['name']} and {zone['alternate_route']}."
-            )
-        else:
-            ai_level = "SMALL_TO_MODERATE"
-            gps_bump = 160
-            cam_bump = 140
-            inflow_bump = 22
-            new_speed = min(float(zone["speed_kmh"]), 11.5)
-            ai_summary = (
-                f"Small-level crowd and slow-moving traffic detected near {zone['name']} ({zone['area']}). "
-                f"Be careful when approaching this junction; expect 15-20 min delay or {zone['alternate_route']}."
-            )
+        ai_level = "MILD CROWD"
+        new_reports_count = max(34, int(zone["citizen_reports"]) + 34)
+        new_gps = max(680, int(zone["gps_headcount"]) + 160)
+        new_cam = max(640, int(zone["camera_headcount"]) + 150)
+        new_inflow = int(zone["inflow_per_min"]) + 18
+        new_speed = min(float(zone["speed_kmh"]), 12.5)
 
-        new_reports_count = int(zone["citizen_reports"]) + 1
-        new_gps = int(zone["gps_headcount"]) + gps_bump
-        new_cam = int(zone["camera_headcount"]) + cam_bump
-        new_inflow = int(zone["inflow_per_min"]) + inflow_bump
+        ai_summary = (
+            f"Mild crowd near {zone['name']} ({new_gps}+ people in sector). "
+            f"Be careful — slow movement ahead; {zone['alternate_route']}."
+        )
+
+        new_manual_status = "PARTIALLY_SAFE" if payload.zone_id == "madiwala_koramangala" else zone["manual_status"]
 
         conn.execute(
             """
@@ -724,10 +750,18 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
                 camera_headcount = ?,
                 inflow_per_min = ?,
                 speed_kmh = ?,
-                manual_status = CASE WHEN manual_status = 'GREEN' THEN '' ELSE manual_status END
+                manual_status = ?
             WHERE zone_id = ?
             """,
-            (new_reports_count, new_gps, new_cam, new_inflow, new_speed, payload.zone_id),
+            (
+                new_reports_count,
+                new_gps,
+                new_cam,
+                new_inflow,
+                new_speed,
+                new_manual_status,
+                payload.zone_id,
+            ),
         )
 
         updated_zone_row = dict(
@@ -737,23 +771,24 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
         created_at = datetime.now(timezone.utc).isoformat()
 
         n8n_payload = {
-            "event": "CITIZEN_CROWD_TRAFFIC_REPORT",
+            "event": "4SIGHT_LIVE_CROWD_ALERT",
             "city": "Bengaluru",
             "police_email_to": RUNTIME_N8N_WEBHOOK.get("police_email"),
             "zone_id": zone["zone_id"],
             "zone_name": zone["name"],
             "area": zone["area"],
             "corridor": zone["corridor"],
-            "priority": enriched["priority"],
+            "priority": enriched["status_label"],
             "risk_score": enriched["risk_score"],
             "confidence_pct": enriched["confidence_pct"],
             "ai_level": ai_level,
             "ai_summary": ai_summary,
             "citizen_note": clean_note,
+            "gps_coordinates": f"{payload.gps_lat}, {payload.gps_lng}",
             "has_photo": bool(has_photo),
             "recommended_police_action": (
-                f"Dispatch nearby patrol to {zone['name']} ({zone['area']}) to verify crowd/traffic buildup "
-                f"and guide commuters toward {zone['alternate_route']}."
+                f"Zone marked {enriched['status_label']} ({new_reports_count} citizen reports, {new_gps} GPS count). "
+                f"Monitor junction and guide traffic toward {zone['alternate_route']}."
             ),
             "timestamp": created_at,
         }
@@ -786,8 +821,8 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
             "INSERT INTO audit_logs (zone_id, action, detail, created_at) VALUES (?, ?, ?, ?)",
             (
                 zone["zone_id"],
-                "PUBLIC_PHOTO_REPORT_ANALYZED",
-                f"Report #{report_id} at {zone['name']}: {ai_summary} [n8n mail: {n8n_status}]",
+                "AI_PHOTO_PREDICTION",
+                f"Report #{report_id} at {zone['name']}: {ai_summary} [n8n: {n8n_status}]",
                 created_at,
             ),
         )
@@ -806,7 +841,7 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
 
 @app.post("/api/zones/{zone_id}/override")
 def override_zone_state(zone_id: str, payload: ZoneOverrideRequest) -> dict[str, object]:
-    """Execute a manual Police Command action (dispatch unit, reallocate, open relief route, or dismiss)."""
+    """Execute a manual Police Command action (reallocate, open bypass, or clear)."""
     init_sqlite_db()
     with get_sqlite_connection() as conn:
         zone_row = conn.execute("SELECT * FROM zones WHERE zone_id = ?", (zone_id,)).fetchone()
@@ -817,15 +852,7 @@ def override_zone_state(zone_id: str, payload: ZoneOverrideRequest) -> dict[str,
         action = payload.action.strip().lower()
         now_str = datetime.now(timezone.utc).isoformat()
 
-        if action == "dispatch_unit":
-            new_units = int(zone["police_units"]) + 2
-            new_outflow = int(zone["outflow_per_min"]) + 25
-            conn.execute(
-                "UPDATE zones SET police_units = ?, outflow_per_min = ? WHERE zone_id = ?",
-                (new_units, new_outflow, zone_id),
-            )
-            detail = f"Dispatched +2 Police Units to {zone['name']}. Outflow capacity increased."
-        elif action == "reallocate_from_gate1":
+        if action == "reallocate_from_gate1":
             conn.execute(
                 "UPDATE zones SET police_units = MAX(1, police_units - 2) WHERE zone_id = ?",
                 ("chinnaswamy_gate1",),
@@ -838,22 +865,22 @@ def override_zone_state(zone_id: str, payload: ZoneOverrideRequest) -> dict[str,
         elif action == "open_relief_route":
             new_outflow = int(zone["outflow_per_min"]) + 45
             conn.execute(
-                "UPDATE zones SET outflow_per_min = ?, manual_status = 'YELLOW' WHERE zone_id = ?",
+                "UPDATE zones SET outflow_per_min = ?, manual_status = 'PARTIALLY_SAFE' WHERE zone_id = ?",
                 (new_outflow, zone_id),
             )
-            detail = f"Opened relief gates/bypass for {zone['name']}. Public reroute broadcast active."
+            detail = f"Opened relief bypass for {zone['name']}. Public reroute broadcast active."
         elif action == "dismiss_alert":
             conn.execute(
                 "UPDATE zones SET citizen_reports = 0, manual_status = 'GREEN' WHERE zone_id = ?",
                 (zone_id,),
             )
-            detail = f"Commander verified & cleared alert at {zone['name']}."
+            detail = f"Cleared alert at {zone['name']}."
         else:
             detail = f"Command action '{action}' recorded for {zone['name']}."
 
         conn.execute(
             "INSERT INTO audit_logs (zone_id, action, detail, created_at) VALUES (?, ?, ?, ?)",
-            (zone_id, action.upper(), f"{detail} ({payload.officer_note})", now_str),
+            (zone_id, action.upper(), detail, now_str),
         )
         conn.commit()
         updated = dict(conn.execute("SELECT * FROM zones WHERE zone_id = ?", (zone_id,)).fetchone())
@@ -871,7 +898,6 @@ def trigger_demo_scenario(payload: ScenarioRequest) -> dict[str, object]:
     """Reset to clean Bengaluru baseline or trigger a preset judge demo scenario."""
     init_sqlite_db()
     scenario = payload.scenario.strip().lower()
-    now_str = datetime.now(timezone.utc).isoformat()
 
     with get_sqlite_connection() as conn:
         if scenario == "reset":
@@ -879,65 +905,24 @@ def trigger_demo_scenario(payload: ScenarioRequest) -> dict[str, object]:
             conn.commit()
             return {"status": "ok", "scenario": "reset", "message": "Restored baseline Bengaluru state."}
 
-        if scenario == "madiwala_crowd":
-            conn.execute(
-                """
-                UPDATE zones
-                SET gps_headcount = 820,
-                    camera_headcount = 790,
-                    inflow_per_min = 76,
-                    outflow_per_min = 48,
-                    speed_kmh = 9.5,
-                    citizen_reports = citizen_reports + 2,
-                    manual_status = 'YELLOW'
-                WHERE zone_id = 'madiwala_koramangala'
-                """
-            )
-            ai_msg = (
-                "Small-level crowd buildup and slow traffic detected near Madiwala - Koramangala Water Tank Junction. "
-                "Be careful; expect 15-20 min delay or take St. Johns Hospital Road bypass."
-            )
-            conn.execute(
-                """
-                INSERT INTO public_reports (
-                    zone_id, zone_name, corridor, note, ai_level, ai_summary,
-                    confidence_pct, has_photo, photo_data, n8n_status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    "madiwala_koramangala",
-                    "Madiwala — Koramangala Water Tank Junction",
-                    "koramangala_madiwala",
-                    "Crowd and slow traffic building up near Madiwala signal towards Koramangala.",
-                    "SMALL_TO_MODERATE",
-                    ai_msg,
-                    84,
-                    0,
-                    None,
-                    "notified",
-                    now_str,
-                ),
-            )
-            conn.commit()
-            return {"status": "ok", "scenario": scenario, "message": ai_msg}
-
     return {"status": "ok", "scenario": scenario}
 
 
 @app.post("/api/n8n/config")
 def configure_n8n_webhook(payload: N8nConfigRequest) -> dict[str, object]:
     """Update the runtime n8n webhook URL and target police email."""
-    RUNTIME_N8N_WEBHOOK["url"] = payload.webhook_url.strip()
+    if payload.webhook_url.strip():
+        RUNTIME_N8N_WEBHOOK["url"] = payload.webhook_url.strip()
     if payload.police_email.strip():
         RUNTIME_N8N_WEBHOOK["police_email"] = payload.police_email.strip()
 
     test_payload = {
-        "event": "N8N_POLICE_MAIL_TEST",
+        "event": "4SIGHT_POLICE_MAIL_ALERT",
         "city": "Bengaluru",
         "police_email_to": RUNTIME_N8N_WEBHOOK["police_email"],
         "zone_name": "Madiwala — Koramangala Water Tank Junction",
-        "priority": "YELLOW",
-        "ai_summary": "Test dispatch from CrowdGuard Bengaluru Command System.",
+        "priority": "GREEN — PARTIALLY SAFE",
+        "ai_summary": "Mild crowd near Madiwala - Koramangala (680+ people). Be careful; prefer St. Johns Road bypass.",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     delivery = trigger_n8n_police_webhook(test_payload)

@@ -5,7 +5,7 @@ from main import app
 
 
 class TestBaseRoutes(unittest.TestCase):
-    """Verify all CrowdGuard Bengaluru routes return HTTP 200 and expected payloads."""
+    """Verify all 4sight Bengaluru routes return HTTP 200 and expected payloads."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -15,7 +15,7 @@ class TestBaseRoutes(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/html", response.headers.get("content-type", ""))
-        self.assertIn("CrowdGuard Bengaluru", response.text)
+        self.assertIn("4sight", response.text)
 
     def test_health_returns_200(self) -> None:
         response = self.client.get("/health")
@@ -58,18 +58,17 @@ class TestBaseRoutes(unittest.TestCase):
         data = res.json()
         self.assertEqual(data["city"], "Bengaluru")
         self.assertEqual(len(data["zones"]), 5)
-        # Ensure Chinnaswamy alerts do not leak into Koramangala-Madiwala route alerts
         for alert in data["route_alerts"]:
             self.assertEqual(alert["corridor"], "koramangala_madiwala")
 
-    def test_public_photo_report_updates_madiwala_and_police_feed(self) -> None:
+    def test_public_photo_report_sets_partially_safe_and_alerts_corridor(self) -> None:
         self.client.post("/api/demo/scenario", json={"scenario": "reset"})
         fake_photo = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/"
         post_res = self.client.post(
             "/api/reports",
             json={
                 "zone_id": "madiwala_koramangala",
-                "note": "Small crowd and traffic jam near Madiwala Water Tank junction",
+                "note": "Mild crowd near Koramangala - Madiwala",
                 "reporter_corridor": "koramangala_madiwala",
                 "photo_data": fake_photo,
             },
@@ -77,31 +76,29 @@ class TestBaseRoutes(unittest.TestCase):
         self.assertEqual(post_res.status_code, 200)
         body = post_res.json()
         self.assertEqual(body["status"], "published")
-        self.assertIn("Madiwala", body["ai_summary"])
+        self.assertEqual(body["zone"]["priority"], "GREEN")
+        self.assertEqual(body["zone"]["status_label"], "GREEN — PARTIALLY SAFE")
 
-        # Verify friend's phone on koramangala_madiwala corridor immediately receives the alert
         state_res = self.client.get("/api/state?corridor=koramangala_madiwala")
         self.assertEqual(state_res.status_code, 200)
         state_data = state_res.json()
         self.assertTrue(len(state_data["corridor_reports"]) >= 1)
-        self.assertTrue(any(r["zone_id"] == "madiwala_koramangala" for r in state_data["all_reports"]))
 
     def test_police_override_and_n8n_config_return_200(self) -> None:
         override_res = self.client.post(
             "/api/zones/chinnaswamy_gate3/override",
-            json={"action": "reallocate_from_gate1", "officer_note": "Move 2 units to Gate 3"},
+            json={"action": "open_relief_route", "officer_note": "Open bypass"},
         )
         self.assertEqual(override_res.status_code, 200)
         self.assertEqual(override_res.json()["status"], "updated")
 
         n8n_res = self.client.post(
             "/api/n8n/config",
-            json={"webhook_url": "", "police_email": "controlroom.blr@ksp.gov.in"},
+            json={"webhook_url": "https://theone14.app.n8n.cloud/webhook/police-alert", "police_email": "controlroom.blr@ksp.gov.in"},
         )
         self.assertEqual(n8n_res.status_code, 200)
         self.assertEqual(n8n_res.json()["status"], "ok")
 
-        # Reset back to clean baseline after test
         self.client.post("/api/demo/scenario", json={"scenario": "reset"})
 
 

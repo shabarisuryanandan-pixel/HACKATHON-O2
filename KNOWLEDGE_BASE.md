@@ -1,4 +1,4 @@
-# Project Knowledge Base: CrowdGuard — Predictive Stampede & Severe Jam Early-Warning System
+# Project Knowledge Base: 4sight — Predictive Stampede & Severe Jam Early-Warning System
 
 > **Purpose**: This document is the single source of truth for the team so everyone can work in parallel across backend, frontend, demo scenarios, and the judge pitch.
 
@@ -121,7 +121,7 @@ The system connects **ground-level public awareness** with **authority emergency
 
 ## 8. Judging Criteria Alignment Strategy (100 Marks)
 
-| Criterion | Marks | How CrowdGuard Wins Full Marks |
+| Criterion | Marks | How 4sight Wins Full Marks |
 | :--- | :---: | :--- |
 | **Problem Discovery and Research** | 15 | Ground the pitch in documented real-world failures: stadium/theatre stampedes (e.g., Chinnaswamy, Hyderabad Pushpa 2 crowd crush) and 40–60 minute urban choke points (e.g., Silk Board). Show the exact root causes: reactive CCTV monitoring, unwarned crowd inflow, and police units stuck in low-risk zones. |
 | **Opportunity Identification** | 15 | Highlight the missing link between **top-down city/venue sensors** and **bottom-up citizen awareness**. Existing maps only show traffic after a jam forms and do not warn pedestrian crowds or reallocate police units dynamically. |

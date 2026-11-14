@@ -3,236 +3,1061 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hackathon Finale Base</title>
+  <title>CrowdGuard Bengaluru — Stampede & Choke-Point Early Warning</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at top left, #f8fafc 0%, #f1f5f9 55%, #e2e8f0 100%);
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .glass-header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    }
+    .phone-shell {
+      width: 380px;
+      max-width: 100%;
+      border-radius: 36px;
+      border: 8px solid #1e293b;
+      background: #f8fafc;
+      box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.22);
+      overflow: hidden;
     }
   </style>
 </head>
-<body class="bg-orange-50/60 text-neutral-900 antialiased min-h-screen flex items-center justify-center p-6">
-  <main class="w-full max-w-xl bg-white border border-orange-200 rounded-xl p-8 shadow-sm">
-    <div class="space-y-1.5 mb-6">
-      <p class="text-xs font-semibold uppercase tracking-wider text-orange-600">System Foundation</p>
-      <h1 class="text-2xl font-semibold tracking-tight text-neutral-900">Application Ready</h1>
-      <p class="text-sm text-neutral-600">
-        Verify live backend, SQLite, and Supabase connections before building tomorrow's solution.
-      </p>
-    </div>
+<body class="text-slate-900 antialiased min-h-screen flex flex-col">
 
-    <!-- Manual On-Click Tabs -->
-    <div class="flex border-b border-orange-100 mb-6" role="tablist">
-      <button
-        id="tab-diagnostics"
-        type="button"
-        role="tab"
-        aria-selected="true"
-        class="px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
-      >
-        Connection Diagnostics
-      </button>
-      <button
-        id="tab-persistence"
-        type="button"
-        role="tab"
-        aria-selected="false"
-        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px"
-      >
-        SQLite Write Test
-      </button>
-    </div>
-
-    <!-- Panel 1: Connection Diagnostics -->
-    <section id="panel-diagnostics" class="space-y-4">
-      <div class="divide-y divide-orange-100 border border-orange-200 rounded-lg px-4 bg-orange-50/30">
-        <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-600">FastAPI Backend</span>
-          <span id="status-backend" class="font-medium text-neutral-900">Checking...</span>
+  <!-- Top Navigation Header -->
+  <header class="glass-header sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <!-- Reserved Slot for Team Logo -->
+        <div id="brand-logo-slot" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs tracking-wider shrink-0">
+          CG
         </div>
-        <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-600">SQLite Persistence</span>
-          <span id="status-sqlite" class="font-medium text-neutral-900">Checking...</span>
-        </div>
-        <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-600">Supabase Project</span>
-          <span id="status-supabase" class="font-medium text-neutral-900">Checking...</span>
-        </div>
-        <div class="py-3 flex items-center justify-between text-sm">
-          <span class="text-neutral-600">Environment</span>
-          <span id="status-env" class="font-medium text-orange-700">-</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-semibold tracking-tight text-slate-900">CrowdGuard Bengaluru</h1>
+            <span class="text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200/80 text-slate-700">
+              Application Ready
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Predictive Stampede & Urban Choke-Point Early-Warning System</p>
         </div>
       </div>
 
-      <button
-        id="run-diagnostics-btn"
-        type="button"
-        class="w-full px-4 py-2.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
-      >
-        Run Connection Check
-      </button>
-    </section>
-
-    <!-- Panel 2: SQLite Write Test -->
-    <section id="panel-persistence" class="hidden space-y-4">
-      <form id="note-form" class="flex gap-2">
-        <input
-          id="note-input"
-          type="text"
-          maxlength="200"
-          required
-          placeholder="Enter a short test message..."
-          class="flex-1 px-3 py-2 text-sm border border-orange-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-        />
-        <button
-          type="submit"
-          class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
-        >
-          Save Record
+      <!-- Main Navigation Tabs (Manual On-Click) -->
+      <nav class="flex items-center gap-1 bg-slate-200/70 p-1 rounded-xl text-xs sm:text-sm font-medium" role="tablist">
+        <button id="main-tab-police" type="button" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition-all">
+          1. Police Dashboard
         </button>
-      </form>
+        <button id="main-tab-phone-preview" type="button" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
+          2. Public App (Phone UI)
+        </button>
+        <button id="main-tab-architecture" type="button" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">
+          3. How System Works
+        </button>
+        <button id="main-tab-mobile-live" type="button" class="px-3.5 py-1.5 rounded-lg text-slate-700 bg-slate-300/60 hover:bg-white transition-all md:hidden">
+          4. Mobile Live App
+        </button>
+      </nav>
 
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-medium uppercase tracking-wider text-orange-700">Recent SQLite Records</span>
-        <button
-          id="refresh-notes-btn"
-          type="button"
-          class="text-xs font-medium text-orange-600 hover:text-orange-800"
-        >
-          Refresh
+      <!-- Quick Sync & Demo Controls -->
+      <div class="flex items-center gap-2">
+        <button id="btn-sync-state" type="button" class="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors">
+          Refresh State
+        </button>
+        <button id="btn-reset-demo" type="button" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+          Reset Baseline
         </button>
       </div>
+    </div>
+  </header>
 
-      <ul id="notes-list" class="divide-y divide-orange-100 border border-orange-200 rounded-lg px-4 text-sm text-neutral-700 bg-orange-50/30">
-        <li class="py-3 text-neutral-400">No records loaded yet.</li>
-      </ul>
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ========================================================= -->
+    <!-- TAB 1: POLICE & EMERGENCY COMMAND DASHBOARD               -->
+    <!-- ========================================================= -->
+    <section id="view-police" class="space-y-6">
+      <!-- Top Metrics Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-panel rounded-xl p-4">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Critical Red Zones</p>
+          <div class="mt-1 flex items-baseline justify-between">
+            <span id="kpi-red-count" class="text-2xl font-bold text-rose-600">2</span>
+            <span class="text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">Immediate Dispatch</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Chinnaswamy Gate 3 & Silk Board</p>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Caution / Watch Zones</p>
+          <div class="mt-1 flex items-baseline justify-between">
+            <span id="kpi-yellow-count" class="text-2xl font-bold text-amber-600">1</span>
+            <span class="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Building Inflow</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Early diversion & patrol advisory</p>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Police Reallocation Ready</p>
+          <div class="mt-1 flex items-baseline justify-between">
+            <span id="kpi-reallocate-units" class="text-2xl font-bold text-slate-900">2 Units</span>
+            <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">From Gate 1 (Green)</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Idle units available for hotspots</p>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Public Photo Reports & n8n</p>
+          <div class="mt-1 flex items-baseline justify-between">
+            <span id="kpi-reports-count" class="text-2xl font-bold text-slate-900">3</span>
+            <span id="kpi-n8n-badge" class="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Mail Alert Ready</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Corroborated with GPS & CCTV</p>
+        </div>
+      </div>
+
+      <!-- Police Force Reallocation Alert Banner -->
+      <div class="glass-panel rounded-xl p-5 border-l-4 border-l-slate-900">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pre-Event & Dynamic Police Force Optimization</p>
+            <h2 class="text-base font-semibold text-slate-900 mt-0.5">Recommended Unit Reallocation Across Bengaluru Entries</h2>
+            <p id="reallocation-summary-text" class="text-sm text-slate-600 mt-1">
+              M. Chinnaswamy Gate 1 (Queen's Rd) is at 21% capacity with 5 Police Units stationed. Move 2 units immediately to Gate 3 or Madiwala-Koramangala hotspot.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2 shrink-0">
+            <button
+              type="button"
+              onclick="triggerOverride('chinnaswamy_gate3', 'reallocate_from_gate1')"
+              class="px-3.5 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              Move 2 Units to Gate 3
+            </button>
+            <button
+              type="button"
+              onclick="triggerOverride('madiwala_koramangala', 'reallocate_from_gate1')"
+              class="px-3.5 py-2 text-xs font-medium text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors"
+            >
+              Move 2 Units to Madiwala
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bengaluru Monitored Zones Grid + Analytics -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left 2 Columns: Zone Priority Cards -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-slate-900">Monitored Bengaluru Choke Points & Venue Gates</h2>
+            <span class="text-xs text-slate-500">Sorted by Priority (Red / Yellow / Green)</span>
+          </div>
+          <div id="police-zones-container" class="space-y-3.5">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- Right Column: Live Citizen Photo Feed + Chart -->
+        <div class="space-y-6">
+          <!-- Incoming Public Reports Feed -->
+          <div class="glass-panel rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-900">Live Public Photo & Field Reports</h3>
+                <p class="text-xs text-slate-500">Instant sync from citizen mobile app</p>
+              </div>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">Live Feed</span>
+            </div>
+            <div id="police-reports-feed" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Chart.js Headcount vs Safe Capacity -->
+          <div class="glass-panel rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-1">Headcount vs. Safe Choke-Point Capacity</h3>
+            <p class="text-xs text-slate-500 mb-3">Blended GPS + CCTV count vs. road/gate width limit</p>
+            <div class="h-52">
+              <canvas id="capacityChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Command Audit Log -->
+          <div class="glass-panel rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-2">Command & n8n Dispatch Audit Log</h3>
+            <ul id="police-audit-list" class="space-y-2 text-xs text-slate-600 max-h-40 overflow-y-auto">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
+
+    <!-- ========================================================= -->
+    <!-- TAB 2: PUBLIC APP SHOWCASE (CENTERED MOBILE PHONE UI)     -->
+    <!-- ========================================================= -->
+    <section id="view-phone-preview" class="hidden">
+      <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Left Description Column for Judges -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="glass-panel rounded-xl p-5 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Public Safety Mobile Experience</p>
+            <h2 class="text-xl font-semibold text-slate-900">Route-Aware Citizen App</h2>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              Citizens are never spammed with unrelated city-wide alerts. The app opens directly in the <strong>Route Alerts</strong> tab and only triggers a warning when the commuter is heading toward or near an affected corridor.
+            </p>
+            <div class="border-t border-slate-200 pt-3 space-y-2 text-xs text-slate-600">
+              <div><strong>1. Route-Only Alerting:</strong> Select <em>Koramangala — Madiwala</em> to see only alerts on that path (ignoring unrelated Chinnaswamy alerts).</div>
+              <div><strong>2. All City Choke Points:</strong> Switch to the second sub-tab inside the phone to inspect all Bengaluru bottlenecks before starting a trip.</div>
+              <div><strong>3. Live Camera Reporting:</strong> Switch to the <em>Post Report</em> sub-tab to capture a live camera photo. AI classifies the crowd level and updates both the Police Dashboard and nearby commuters.</div>
+            </div>
+            <div class="pt-2">
+              <button
+                type="button"
+                onclick="switchMainTab('mobile-live')"
+                class="w-full px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                Open Full-Screen Mobile View (Tab 4)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Centered Phone Mockup -->
+        <div class="lg:col-span-7 flex justify-center">
+          <div class="phone-shell flex flex-col min-h-[660px] max-h-[720px]">
+            <!-- Phone Status Bar -->
+            <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between text-xs">
+              <span class="font-semibold tracking-tight">CrowdGuard Public</span>
+              <span class="text-[11px] text-slate-300">Bengaluru Live</span>
+            </div>
+
+            <!-- Phone Sub-Navigation (Opens in Alerts by default) -->
+            <div class="bg-white border-b border-slate-200 grid grid-cols-3 text-xs font-medium">
+              <button id="phone1-subtab-alerts" type="button" onclick="switchPhoneSubtab('phone1', 'alerts')" class="py-2.5 border-b-2 border-slate-900 text-slate-900">
+                Route Alerts
+              </button>
+              <button id="phone1-subtab-chokepoints" type="button" onclick="switchPhoneSubtab('phone1', 'chokepoints')" class="py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                Choke Points
+              </button>
+              <button id="phone1-subtab-post" type="button" onclick="switchPhoneSubtab('phone1', 'post')" class="py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                Post Photo
+              </button>
+            </div>
+
+            <!-- Phone Body Content -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+              <!-- SUBTAB 1: ROUTE ALERTS (PROXIMITY FILTERED) -->
+              <div id="phone1-panel-alerts" class="space-y-3.5">
+                <div class="bg-white border border-slate-200 rounded-xl p-3">
+                  <label for="phone1-corridor-select" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                    Heading Towards / Current Corridor
+                  </label>
+                  <select
+                    id="phone1-corridor-select"
+                    onchange="syncCorridorSelection(this.value)"
+                    class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:border-slate-900"
+                  >
+                    <option value="koramangala_madiwala">Koramangala — Madiwala Junction</option>
+                    <option value="silk_board_hosur">Silk Board — Hosur Road Corridor</option>
+                    <option value="cbd_chinnaswamy">Chinnaswamy Stadium — MG Road CBD</option>
+                    <option value="majestic_west">Majestic Bus & Metro Concourse</option>
+                  </select>
+                  <p class="text-[11px] text-slate-500 mt-1.5">
+                    Only showing alerts along your active route. Unrelated zones are muted.
+                  </p>
+                </div>
+
+                <div id="phone1-route-alerts-list" class="space-y-3">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- SUBTAB 2: ALL CITY CHOKE POINTS -->
+              <div id="phone1-panel-chokepoints" class="hidden space-y-3">
+                <p class="text-xs text-slate-500">All monitored Bengaluru choke points and safe bypass routes:</p>
+                <div id="phone1-all-zones-list" class="space-y-2.5">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- SUBTAB 3: POST PHOTO REPORT -->
+              <div id="phone1-panel-post" class="hidden space-y-3.5">
+                <form id="phone1-report-form" class="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Select Bengaluru Location</label>
+                    <select id="phone1-report-zone" class="w-full text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50">
+                      <option value="madiwala_koramangala">Madiwala — Koramangala Water Tank Junction</option>
+                      <option value="silk_board">Silk Board Flyover Junction</option>
+                      <option value="chinnaswamy_gate3">M. Chinnaswamy Stadium — Gate 3</option>
+                      <option value="majestic_concourse">Majestic Bus & Metro Concourse</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Capture Live Photo (Camera)</label>
+                    <input
+                      id="phone1-photo-input"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onchange="handlePhotoPreview(this, 'phone1-photo-preview')"
+                      class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-slate-900 file:text-white hover:file:bg-slate-800"
+                    />
+                    <img id="phone1-photo-preview" alt="Captured preview" class="hidden mt-2 w-full h-36 object-cover rounded-lg border border-slate-200" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">What is happening?</label>
+                    <textarea
+                      id="phone1-report-note"
+                      rows="2"
+                      placeholder="e.g., Crowd and traffic building up near Madiwala signal..."
+                      class="w-full text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:border-slate-900"
+                    >Small crowd and traffic jam building up near Madiwala - Koramangala signal.</textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="w-full py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                  >
+                    Analyze Photo & Post Alert
+                  </button>
+                  <p id="phone1-post-feedback" class="text-[11px] text-slate-600 hidden"></p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- TAB 3: HOW OUR SYSTEM WORKS (TECHNICAL & PRIVACY)         -->
+    <!-- ========================================================= -->
+    <section id="view-architecture" class="hidden space-y-6">
+      <div class="glass-panel rounded-xl p-6">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">System Architecture & Methodology</p>
+        <h2 class="text-xl font-semibold text-slate-900 mt-1">How CrowdGuard Predicts Stampedes & Severe Traffic Jams</h2>
+        <p class="text-sm text-slate-600 mt-1 max-w-3xl">
+          Rather than waiting for an accident to happen, CrowdGuard fuses three independent signals with road/gate width geometry to forecast bottlenecks 10 to 20 minutes early and automatically notify both Police Command (via n8n email + dashboard) and approaching commuters.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+          <!-- 1. GPS & Mobility Calculation -->
+          <div class="bg-white/90 border border-slate-200 rounded-xl p-5 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Signal 1 — Mobility & Net Flow</span>
+            <h3 class="text-base font-semibold text-slate-900">How We Calculate GPS Headcount & ETA to Red</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              We ingest anonymized zone-level device counts (<code class="bg-slate-100 px-1 py-0.5 rounded">gps_headcount</code>), entry rate (<code class="bg-slate-100 px-1 py-0.5 rounded">inflow_per_min</code>), exit rate (<code class="bg-slate-100 px-1 py-0.5 rounded">outflow_per_min</code>), and average movement speed (<code class="bg-slate-100 px-1 py-0.5 rounded">speed_kmh</code>).
+            </p>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 space-y-1">
+              <div>Net_Flow = Inflow_per_min - Outflow_per_min</div>
+              <div>Density = Blended_Count / (Road_Width_m * 40m)</div>
+              <div>ETA_to_Red = (Safe_Capacity - Blended_Count) / Net_Flow</div>
+            </div>
+            <p class="text-xs text-slate-500">
+              When speed drops below 3 km/h while Net Flow remains positive, a stagnation penalty elevates the zone to Yellow or Red before a crush occurs.
+            </p>
+          </div>
+
+          <!-- 2. Public Posts & Confidence Score -->
+          <div class="bg-white/90 border border-slate-200 rounded-xl p-5 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Signal 2 — Crowdsourced Reports & Anti-Spam</span>
+            <h3 class="text-base font-semibold text-slate-900">How User Posts & Confidence % Are Evaluated</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              A single unverified citizen post never causes a false city-wide panic. When a user captures a photo and submits a report, the backend checks sensor agreement between GPS and CCTV counts and adds a corroboration bonus per independent report:
+            </p>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 space-y-1">
+              <div>Sensor_Agreement = 1 - |GPS - CCTV| / Blended_Count</div>
+              <div>Confidence_% = (Sensor_Agreement * 72) + min(Reports * 7, 25)</div>
+            </div>
+            <p class="text-xs text-slate-500">
+              Reports also only notify commuters whose active route matches that corridor, preventing alert fatigue.
+            </p>
+          </div>
+
+          <!-- 3. CCTV Cameras & Road Width Geometry -->
+          <div class="bg-white/90 border border-slate-200 rounded-xl p-5 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Signal 3 — Optical Density & Choke-Point Width</span>
+            <h3 class="text-base font-semibold text-slate-900">How CCTV Cameras & Road/Gate Width Work Together</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              1,000 people on a 14-meter road is manageable, whereas 1,000 people pressing into a 6.5-meter stadium gate (like Chinnaswamy Gate 3) is critical. Every zone stores its physical width (<code class="bg-slate-100 px-1 py-0.5 rounded">road_width_m</code>) and safe capacity.
+            </p>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              During scheduled events (matches, concerts, peak hours), the AI pre-loads the venue schedule and identifies idle police units at low-load gates (such as Gate 1) so commanders can reallocate them in one click.
+            </p>
+          </div>
+
+          <!-- 4. Privacy & Security Guardrails -->
+          <div class="bg-white/90 border border-slate-200 rounded-xl p-5 space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Privacy & Governance</span>
+            <h3 class="text-base font-semibold text-slate-900">Addressing Privacy Risks & Surveillance Concerns</h3>
+            <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+              <li><strong>No Personal GPS Tracking:</strong> The backend never stores individual phone numbers, user identities, or historical movement trajectories—only aggregate zone counts.</li>
+              <li><strong>No Facial Recognition:</strong> Camera feeds and citizen photos are evaluated strictly for crowd/traffic density, never biometric identification.</li>
+              <li><strong>Human-in-the-Loop Police Override:</strong> Every automated alert can be acknowledged, escalated, rerouted, or dismissed manually by Police Command.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- n8n Police Email Automation Setup & Live Webhook Tester -->
+      <div class="glass-panel rounded-xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Automated Police Dispatch Integration</p>
+            <h3 class="text-lg font-semibold text-slate-900">n8n Police Email Webhook Configuration</h3>
+          </div>
+          <span id="n8n-config-status" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-200 text-slate-800">
+            Ready to Connect
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-600">
+          Whenever a citizen posts a photo report or a zone escalates, FastAPI sends a structured JSON webhook to <strong>n8n</strong>, which immediately emails the Bengaluru Police Control Room with the location, AI crowd summary, confidence score, and recommended unit action.
+        </p>
+
+        <form id="n8n-config-form" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <div>
+            <label class="block text-xs font-medium text-slate-700 mb-1">n8n Webhook URL (POST)</label>
+            <input
+              id="input-n8n-url"
+              type="url"
+              placeholder="https://your-n8n-instance.app.n8n.cloud/webhook/police-alert"
+              class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-slate-900"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-700 mb-1">Target Police Control Email</label>
+            <input
+              id="input-police-email"
+              type="email"
+              value="controlroom.blr@ksp.gov.in"
+              class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-slate-900"
+            />
+          </div>
+          <button
+            type="submit"
+            class="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            Save & Send Test Alert to n8n
+          </button>
+        </form>
+        <p id="n8n-test-feedback" class="text-xs text-slate-600 hidden"></p>
+
+        <div class="bg-slate-900 text-slate-100 rounded-xl p-4 text-xs space-y-2">
+          <div class="font-semibold text-white">How to Set Up Your n8n Workflow in 2 Minutes:</div>
+          <ol class="list-decimal pl-4 space-y-1 text-slate-300">
+            <li>In n8n, create a new workflow and add a <strong>Webhook</strong> trigger node: set HTTP Method to <code class="text-white">POST</code> and Path to <code class="text-white">police-alert</code>. Copy the Production/Test URL into the box above.</li>
+            <li>Connect a <strong>Gmail</strong> or <strong>Send Email</strong> node after the Webhook node.</li>
+            <li>Set <strong>To Email</strong> to <code class="text-white">{{ $json.body.police_email_to }}</code>, <strong>Subject</strong> to <code class="text-white">[CrowdGuard {{ $json.body.priority }}] {{ $json.body.zone_name }}</code>, and <strong>Message</strong> to <code class="text-white">{{ $json.body.ai_summary }} — Action: {{ $json.body.recommended_police_action }}</code>.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- TAB 4: FULL-SCREEN MOBILE LIVE APP (OPTIMIZED FOR PHONES) -->
+    <!-- ========================================================= -->
+    <section id="view-mobile-live" class="hidden max-w-md mx-auto">
+      <div class="glass-panel rounded-2xl overflow-hidden border border-slate-300 shadow-md">
+        <!-- Mobile Header -->
+        <div class="bg-slate-900 text-white px-4 py-3.5 flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-semibold">CrowdGuard Bengaluru Mobile</h2>
+            <p class="text-[11px] text-slate-300">Live Citizen Alert & Camera Reporting</p>
+          </div>
+          <button
+            type="button"
+            onclick="refreshAllViews()"
+            class="px-2.5 py-1 text-[11px] font-medium bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700"
+          >
+            Sync Alerts
+          </button>
+        </div>
+
+        <!-- Mobile Sub-Tabs -->
+        <div class="bg-white border-b border-slate-200 grid grid-cols-3 text-xs font-semibold">
+          <button id="phone2-subtab-alerts" type="button" onclick="switchPhoneSubtab('phone2', 'alerts')" class="py-3 border-b-2 border-slate-900 text-slate-900">
+            Route Alerts
+          </button>
+          <button id="phone2-subtab-chokepoints" type="button" onclick="switchPhoneSubtab('phone2', 'chokepoints')" class="py-3 border-b-2 border-transparent text-slate-500">
+            Choke Points
+          </button>
+          <button id="phone2-subtab-post" type="button" onclick="switchPhoneSubtab('phone2', 'post')" class="py-3 border-b-2 border-transparent text-slate-500">
+            Post Photo
+          </button>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- MOBILE SUBTAB 1: ROUTE ALERTS -->
+          <div id="phone2-panel-alerts" class="space-y-3.5">
+            <div class="bg-white border border-slate-200 rounded-xl p-3">
+              <label for="phone2-corridor-select" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                My Current Route / Heading Towards
+              </label>
+              <select
+                id="phone2-corridor-select"
+                onchange="syncCorridorSelection(this.value)"
+                class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2"
+              >
+                <option value="koramangala_madiwala">Koramangala — Madiwala Junction</option>
+                <option value="silk_board_hosur">Silk Board — Hosur Road Corridor</option>
+                <option value="cbd_chinnaswamy">Chinnaswamy Stadium — MG Road CBD</option>
+                <option value="majestic_west">Majestic Bus & Metro Concourse</option>
+              </select>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Alerts appear only when an incident affects your selected corridor.
+              </p>
+            </div>
+
+            <div id="phone2-route-alerts-list" class="space-y-3">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- MOBILE SUBTAB 2: ALL CHOKE POINTS -->
+          <div id="phone2-panel-chokepoints" class="hidden space-y-3">
+            <p class="text-xs text-slate-500">All Bengaluru choke points and recommended alternate paths:</p>
+            <div id="phone2-all-zones-list" class="space-y-2.5">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- MOBILE SUBTAB 3: POST CAMERA PHOTO -->
+          <div id="phone2-panel-post" class="hidden space-y-3.5">
+            <form id="phone2-report-form" class="bg-white border border-slate-200 rounded-xl p-4 space-y-3.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Location in Bengaluru</label>
+                <select id="phone2-report-zone" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2.5 bg-slate-50">
+                  <option value="madiwala_koramangala">Madiwala — Koramangala Water Tank Junction</option>
+                  <option value="silk_board">Silk Board Flyover Junction</option>
+                  <option value="chinnaswamy_gate3">M. Chinnaswamy Stadium — Gate 3</option>
+                  <option value="majestic_concourse">Majestic Bus & Metro Concourse</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Take Photo with Phone Camera</label>
+                <input
+                  id="phone2-photo-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onchange="handlePhotoPreview(this, 'phone2-photo-preview')"
+                  class="w-full text-xs text-slate-600 file:mr-2 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white"
+                />
+                <img id="phone2-photo-preview" alt="Captured preview" class="hidden mt-2 w-full h-44 object-cover rounded-lg border border-slate-200" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Observation Details</label>
+                <textarea
+                  id="phone2-report-note"
+                  rows="2"
+                  placeholder="Describe crowd or traffic jam..."
+                  class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2"
+                >Small crowd and traffic jam building up near Madiwala - Koramangala signal.</textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="w-full py-3 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                Analyze Photo & Broadcast Alert
+              </button>
+              <p id="phone2-post-feedback" class="text-xs text-slate-700 hidden"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <script>
-    const tabDiagnostics = document.getElementById("tab-diagnostics");
-    const tabPersistence = document.getElementById("tab-persistence");
-    const panelDiagnostics = document.getElementById("panel-diagnostics");
-    const panelPersistence = document.getElementById("panel-persistence");
+    let currentCorridor = "koramangala_madiwala";
+    let capacityChartInstance = null;
+    let capturedPhotos = {
+      "phone1-photo-preview": null,
+      "phone2-photo-preview": null,
+    };
 
-    const statusBackend = document.getElementById("status-backend");
-    const statusSqlite = document.getElementById("status-sqlite");
-    const statusSupabase = document.getElementById("status-supabase");
-    const statusEnv = document.getElementById("status-env");
-    const runDiagnosticsBtn = document.getElementById("run-diagnostics-btn");
+    const mainTabs = {
+      police: {
+        btn: document.getElementById("main-tab-police"),
+        view: document.getElementById("view-police"),
+      },
+      "phone-preview": {
+        btn: document.getElementById("main-tab-phone-preview"),
+        view: document.getElementById("view-phone-preview"),
+      },
+      architecture: {
+        btn: document.getElementById("main-tab-architecture"),
+        view: document.getElementById("view-architecture"),
+      },
+      "mobile-live": {
+        btn: document.getElementById("main-tab-mobile-live"),
+        view: document.getElementById("view-mobile-live"),
+      },
+    };
 
-    const noteForm = document.getElementById("note-form");
-    const noteInput = document.getElementById("note-input");
-    const notesList = document.getElementById("notes-list");
-    const refreshNotesBtn = document.getElementById("refresh-notes-btn");
-
-    function switchTab(activeTab) {
-      const isDiag = activeTab === "diagnostics";
-      panelDiagnostics.classList.toggle("hidden", !isDiag);
-      panelPersistence.classList.toggle("hidden", isDiag);
-
-      tabDiagnostics.setAttribute("aria-selected", String(isDiag));
-      tabPersistence.setAttribute("aria-selected", String(!isDiag));
-
-      tabDiagnostics.className = isDiag
-        ? "px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
-        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px";
-
-      tabPersistence.className = !isDiag
-        ? "px-4 py-2 text-sm font-medium border-b-2 border-orange-600 text-orange-700 -mb-px"
-        : "px-4 py-2 text-sm font-medium border-b-2 border-transparent text-neutral-500 hover:text-orange-600 -mb-px";
+    function switchMainTab(targetKey) {
+      Object.keys(mainTabs).forEach((key) => {
+        const isActive = key === targetKey;
+        mainTabs[key].view.classList.toggle("hidden", !isActive);
+        if (mainTabs[key].btn) {
+          if (isActive) {
+            mainTabs[key].btn.className =
+              key === "mobile-live"
+                ? "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition-all md:hidden"
+                : "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition-all";
+          } else {
+            mainTabs[key].btn.className =
+              key === "mobile-live"
+                ? "px-3.5 py-1.5 rounded-lg text-slate-700 bg-slate-300/60 hover:bg-white transition-all md:hidden"
+                : "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+          }
+        }
+      });
     }
 
-    async function runDiagnostics() {
-      statusBackend.textContent = "Checking...";
-      statusSqlite.textContent = "Checking...";
-      statusSupabase.textContent = "Checking...";
+    function switchPhoneSubtab(prefix, subtab) {
+      ["alerts", "chokepoints", "post"].forEach((name) => {
+        const btn = document.getElementById(`${prefix}-subtab-${name}`);
+        const panel = document.getElementById(`${prefix}-panel-${name}`);
+        const active = name === subtab;
+        if (panel) panel.classList.toggle("hidden", !active);
+        if (btn) {
+          btn.className = active
+            ? "py-2.5 border-b-2 border-slate-900 text-slate-900 font-semibold"
+            : "py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800";
+        }
+      });
+    }
+
+    function priorityBadgeHtml(priority) {
+      if (priority === "RED") {
+        return '<span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-rose-600 text-white">RED — CRITICAL</span>';
+      }
+      if (priority === "YELLOW") {
+        return '<span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-amber-500 text-white">YELLOW — CAUTION</span>';
+      }
+      return '<span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-600 text-white">GREEN — NORMAL</span>';
+    }
+
+    function handlePhotoPreview(inputEl, previewId) {
+      const file = inputEl.files && inputEl.files[0];
+      const previewEl = document.getElementById(previewId);
+      if (!file || !previewEl) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxW = 480;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.72);
+          capturedPhotos[previewId] = compressedDataUrl;
+          previewEl.src = compressedDataUrl;
+          previewEl.classList.remove("hidden");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function syncCorridorSelection(corridorValue) {
+      currentCorridor = corridorValue;
+      const sel1 = document.getElementById("phone1-corridor-select");
+      const sel2 = document.getElementById("phone2-corridor-select");
+      if (sel1) sel1.value = corridorValue;
+      if (sel2) sel2.value = corridorValue;
+      refreshAllViews();
+    }
+
+    async function refreshAllViews() {
       try {
-        const res = await fetch("/api/diagnostics");
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        const res = await fetch(`/api/state?corridor=${encodeURIComponent(currentCorridor)}`);
+        if (!res.ok) return;
         const data = await res.json();
-
-        statusBackend.textContent = data.backend?.status === "ok" ? "Online" : "Error";
-        statusEnv.textContent = data.backend?.environment || "unknown";
-
-        if (data.sqlite?.connected) {
-          statusSqlite.textContent = "Connected (" + data.sqlite.record_count + " records)";
-        } else {
-          statusSqlite.textContent = "Disconnected";
-        }
-
-        if (data.supabase?.reachable) {
-          statusSupabase.textContent = "Connected (HTTP 200)";
-        } else if (data.supabase?.configured) {
-          statusSupabase.textContent = "Configured (Unreachable)";
-        } else {
-          statusSupabase.textContent = "Not configured";
-        }
+        renderPoliceDashboard(data);
+        renderPhoneViews("phone1", data);
+        renderPhoneViews("phone2", data);
       } catch (err) {
-        statusBackend.textContent = "Unavailable";
-        statusSqlite.textContent = "Unknown";
-        statusSupabase.textContent = "Unknown";
+        console.error("Failed to fetch state:", err);
       }
     }
 
-    async function loadNotes() {
+    function renderPoliceDashboard(data) {
+      const zones = data.zones || [];
+      const order = { RED: 0, YELLOW: 1, GREEN: 2 };
+      const sortedZones = [...zones].sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
+
+      const redCount = zones.filter((z) => z.priority === "RED").length;
+      const yellowCount = zones.filter((z) => z.priority === "YELLOW").length;
+      document.getElementById("kpi-red-count").textContent = String(redCount);
+      document.getElementById("kpi-yellow-count").textContent = String(yellowCount);
+      document.getElementById("kpi-reports-count").textContent = String((data.all_reports || []).length);
+
+      const n8nBadge = document.getElementById("kpi-n8n-badge");
+      if (data.n8n && data.n8n.configured) {
+        n8nBadge.textContent = "n8n Webhook Live";
+        n8nBadge.className = "text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200";
+      }
+
+      if (data.reallocation_plan && data.reallocation_plan.length > 0) {
+        const topPlan = data.reallocation_plan[0];
+        document.getElementById("reallocation-summary-text").textContent = topPlan.reason;
+      }
+
+      const container = document.getElementById("police-zones-container");
+      container.innerHTML = sortedZones
+        .map((z) => {
+          const borderAccent =
+            z.priority === "RED"
+              ? "border-l-4 border-l-rose-600"
+              : z.priority === "YELLOW"
+              ? "border-l-4 border-l-amber-500"
+              : "border-l-4 border-l-emerald-600";
+
+          return `
+            <div class="glass-panel rounded-xl p-4 ${borderAccent}">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-slate-900">${z.name}</h3>
+                    ${priorityBadgeHtml(z.priority)}
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5">${z.area} • ${z.zone_type} • Width: ${z.road_width_m}m</p>
+                </div>
+                <div class="text-right text-xs">
+                  <span class="font-semibold text-slate-900">Confidence: ${z.confidence_pct}%</span>
+                  <p class="text-slate-500">Risk Score: ${z.risk_score}/100</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3 pt-3 border-t border-slate-200/80 text-xs">
+                <div>
+                  <span class="text-slate-500 block">GPS Headcount</span>
+                  <span class="font-semibold text-slate-900">${z.gps_headcount}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">CCTV Count</span>
+                  <span class="font-semibold text-slate-900">${z.camera_headcount}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Net Inflow</span>
+                  <span class="font-semibold text-slate-900">${z.net_flow_per_min >= 0 ? "+" : ""}${z.net_flow_per_min}/min</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Citizen Reports</span>
+                  <span class="font-semibold text-slate-900">${z.citizen_reports}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Police Units</span>
+                  <span class="font-semibold text-slate-900">${z.police_units} stationed</span>
+                </div>
+              </div>
+
+              <div class="mt-3 bg-slate-100/80 rounded-lg px-3 py-2 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <strong>Prediction:</strong> ${z.prediction_text}
+                  <div class="text-slate-500 mt-0.5"><strong>Bypass:</strong> ${z.alternate_route}</div>
+                </div>
+                <div class="flex flex-wrap gap-1.5 shrink-0">
+                  <button onclick="triggerOverride('${z.zone_id}', 'dispatch_unit')" class="px-2.5 py-1 text-[11px] font-medium bg-slate-900 text-white rounded hover:bg-slate-800">
+                    +2 Police Units
+                  </button>
+                  <button onclick="triggerOverride('${z.zone_id}', 'open_relief_route')" class="px-2.5 py-1 text-[11px] font-medium bg-white border border-slate-300 text-slate-800 rounded hover:bg-slate-50">
+                    Open Bypass
+                  </button>
+                  <button onclick="triggerOverride('${z.zone_id}', 'dismiss_alert')" class="px-2.5 py-1 text-[11px] font-medium bg-white border border-slate-300 text-slate-600 rounded hover:bg-slate-50">
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      const feedEl = document.getElementById("police-reports-feed");
+      const allReports = data.all_reports || [];
+      if (allReports.length === 0) {
+        feedEl.innerHTML = '<p class="text-xs text-slate-400">No citizen reports logged yet.</p>';
+      } else {
+        feedEl.innerHTML = allReports
+          .map(
+            (r) => `
+            <div class="bg-white border border-slate-200 rounded-lg p-3 space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-slate-900">${r.zone_name}</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${
+                  r.ai_level === "HIGH" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
+                }">${r.ai_level}</span>
+              </div>
+              ${
+                r.has_photo && r.photo_data
+                  ? `<img src="${r.photo_data}" alt="Citizen report" class="w-full h-28 object-cover rounded border border-slate-200" />`
+                  : ""
+              }
+              <p class="text-xs text-slate-700">${r.ai_summary}</p>
+              <p class="text-[11px] text-slate-500">Citizen note: "${r.note}" • Confidence: ${r.confidence_pct}% • n8n: ${r.n8n_status}</p>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      const auditEl = document.getElementById("police-audit-list");
+      auditEl.innerHTML = (data.audit_logs || [])
+        .map(
+          (a) => `
+          <li class="border-b border-slate-100 pb-1.5">
+            <span class="font-semibold text-slate-800">${a.action}:</span> ${a.detail}
+          </li>
+        `
+        )
+        .join("");
+
+      renderCapacityChart(zones);
+    }
+
+    function renderPhoneViews(prefix, data) {
+      const routeAlertsEl = document.getElementById(`${prefix}-route-alerts-list`);
+      const allZonesEl = document.getElementById(`${prefix}-all-zones-list`);
+      const routeAlerts = data.route_alerts || [];
+      const corridorReports = data.corridor_reports || [];
+
+      if (routeAlerts.length === 0 && corridorReports.length === 0) {
+        routeAlertsEl.innerHTML = `
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-1">
+            <div class="font-semibold">Route Clear on Selected Corridor</div>
+            <p class="text-emerald-700">No crowd crush or traffic blockage reported along your current heading. Unrelated city alerts are hidden.</p>
+          </div>
+        `;
+      } else {
+        const zoneCards = routeAlerts
+          .map(
+            (z) => `
+            <div class="bg-white border-l-4 ${
+              z.priority === "RED" ? "border-l-rose-600" : "border-l-amber-500"
+            } border border-slate-200 rounded-xl p-3.5 space-y-1.5 shadow-sm">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-slate-900">${z.name}</span>
+                ${priorityBadgeHtml(z.priority)}
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed">${z.public_advisory}</p>
+              <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                Confidence: ${z.confidence_pct}% • Speed: ${z.speed_kmh} km/h • Reports: ${z.citizen_reports}
+              </div>
+            </div>
+          `
+          )
+          .join("");
+
+        const reportCards = corridorReports
+          .map(
+            (r) => `
+            <div class="bg-amber-50/90 border border-amber-300 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-900">Live Commuter Photo Alert</span>
+                <span class="text-[11px] font-medium text-amber-800">${r.confidence_pct}% Confidence</span>
+              </div>
+              ${
+                r.has_photo && r.photo_data
+                  ? `<img src="${r.photo_data}" alt="Reported crowd" class="w-full h-32 object-cover rounded-lg border border-amber-200" />`
+                  : ""
+              }
+              <p class="text-xs font-medium text-slate-900">${r.ai_summary}</p>
+              <p class="text-[11px] text-slate-600">Reported note: "${r.note}"</p>
+            </div>
+          `
+          )
+          .join("");
+
+        routeAlertsEl.innerHTML = reportCards + zoneCards;
+      }
+
+      if (allZonesEl) {
+        allZonesEl.innerHTML = (data.zones || [])
+          .map(
+            (z) => `
+            <div class="bg-white border border-slate-200 rounded-xl p-3 space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-slate-900">${z.name}</span>
+                ${priorityBadgeHtml(z.priority)}
+              </div>
+              <p class="text-[11px] text-slate-600">${z.public_advisory}</p>
+            </div>
+          `
+          )
+          .join("");
+      }
+    }
+
+    function renderCapacityChart(zones) {
+      const ctx = document.getElementById("capacityChart");
+      if (!ctx || typeof Chart === "undefined") return;
+
+      const labels = zones.map((z) => z.name.split("—")[0].trim());
+      const blended = zones.map((z) => z.blended_headcount);
+      const capacities = zones.map((z) => z.safe_capacity);
+
+      if (capacityChartInstance) {
+        capacityChartInstance.data.labels = labels;
+        capacityChartInstance.data.datasets[0].data = blended;
+        capacityChartInstance.data.datasets[1].data = capacities;
+        capacityChartInstance.update();
+        return;
+      }
+
+      capacityChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Live Blended Count",
+              data: blended,
+              backgroundColor: "#0f172a",
+              borderRadius: 4,
+            },
+            {
+              label: "Safe Capacity",
+              data: capacities,
+              backgroundColor: "#cbd5e1",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } },
+          },
+          scales: {
+            x: { ticks: { font: { size: 10 } } },
+            y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+    }
+
+    async function submitCitizenReport(prefix, event) {
+      event.preventDefault();
+      const zoneId = document.getElementById(`${prefix}-report-zone`).value;
+      const note = document.getElementById(`${prefix}-report-note`).value.trim();
+      const feedbackEl = document.getElementById(`${prefix}-post-feedback`);
+      const photoData = capturedPhotos[`${prefix}-photo-preview`] || null;
+
+      feedbackEl.textContent = "Analyzing photo and broadcasting alert to corridor & Police Command...";
+      feedbackEl.classList.remove("hidden");
+
       try {
-        const res = await fetch("/api/notes");
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        const notes = data.notes || [];
-        notesList.innerHTML = "";
-        if (notes.length === 0) {
-          const li = document.createElement("li");
-          li.className = "py-3 text-neutral-400";
-          li.textContent = "No records saved yet.";
-          notesList.appendChild(li);
-          return;
-        }
-        notes.forEach((item) => {
-          const li = document.createElement("li");
-          li.className = "py-2.5 flex items-center justify-between gap-4";
-          const textSpan = document.createElement("span");
-          textSpan.className = "text-neutral-800 truncate";
-          textSpan.textContent = item.note;
-          const idSpan = document.createElement("span");
-          idSpan.className = "text-xs text-orange-600 font-medium shrink-0";
-          idSpan.textContent = "#" + item.id;
-          li.appendChild(textSpan);
-          li.appendChild(idSpan);
-          notesList.appendChild(li);
+        const res = await fetch("/api/reports", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            zone_id: zoneId,
+            note,
+            reporter_corridor: currentCorridor,
+            photo_data: photoData,
+          }),
         });
+        const data = await res.json();
+        if (res.ok) {
+          feedbackEl.textContent = `Published: ${data.ai_summary}`;
+          if (data.zone && data.zone.corridor) {
+            syncCorridorSelection(data.zone.corridor);
+          } else {
+            await refreshAllViews();
+          }
+          setTimeout(() => {
+            switchPhoneSubtab(prefix, "alerts");
+          }, 900);
+        }
       } catch (err) {
-        notesList.innerHTML = '<li class="py-3 text-neutral-500">Failed to load records.</li>';
+        feedbackEl.textContent = "Error submitting report.";
       }
     }
 
-    tabDiagnostics.addEventListener("click", () => switchTab("diagnostics"));
-    tabPersistence.addEventListener("click", () => {
-      switchTab("persistence");
-      loadNotes();
-    });
-
-    runDiagnosticsBtn.addEventListener("click", runDiagnostics);
-    refreshNotesBtn.addEventListener("click", loadNotes);
-
-    noteForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const noteText = noteInput.value.trim();
-      if (!noteText) return;
-      await fetch("/api/notes", {
+    async function triggerOverride(zoneId, action) {
+      await fetch(`/api/zones/${encodeURIComponent(zoneId)}/override`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: noteText }),
+        body: JSON.stringify({ action, officer_note: "Triggered from Bengaluru Police Command UI" }),
       });
-      noteInput.value = "";
-      await loadNotes();
+      await refreshAllViews();
+    }
+
+    document.getElementById("main-tab-police").addEventListener("click", () => switchMainTab("police"));
+    document.getElementById("main-tab-phone-preview").addEventListener("click", () => switchMainTab("phone-preview"));
+    document.getElementById("main-tab-architecture").addEventListener("click", () => switchMainTab("architecture"));
+    document.getElementById("main-tab-mobile-live").addEventListener("click", () => switchMainTab("mobile-live"));
+
+    document.getElementById("btn-sync-state").addEventListener("click", refreshAllViews);
+    document.getElementById("btn-reset-demo").addEventListener("click", async () => {
+      await fetch("/api/demo/scenario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: "reset" }),
+      });
+      await refreshAllViews();
     });
 
-    runDiagnostics();
+    document.getElementById("phone1-report-form").addEventListener("submit", (e) => submitCitizenReport("phone1", e));
+    document.getElementById("phone2-report-form").addEventListener("submit", (e) => submitCitizenReport("phone2", e));
+
+    document.getElementById("n8n-config-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const webhookUrl = document.getElementById("input-n8n-url").value.trim();
+      const policeEmail = document.getElementById("input-police-email").value.trim();
+      const feedback = document.getElementById("n8n-test-feedback");
+      feedback.classList.remove("hidden");
+      feedback.textContent = "Saving and sending test payload to n8n...";
+
+      const res = await fetch("/api/n8n/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: webhookUrl, police_email: policeEmail }),
+      });
+      const data = await res.json();
+      feedback.textContent = `n8n status: ${data.test_delivery} (Target email: ${data.police_email})`;
+      await refreshAllViews();
+    });
+
+    // If opened on a mobile phone screen, automatically open Tab 4 (Mobile Live App)
+    if (window.innerWidth < 768) {
+      switchMainTab("mobile-live");
+    }
+
+    refreshAllViews();
   </script>
 </body>
 </html>

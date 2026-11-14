@@ -1167,11 +1167,11 @@
       // Card 1: Single Unified Mild Crowd Alert Near Koramangala (when reported or active, unless swiped away on this device)
       if (
         !dismissedKeys.includes(koramangalaKey) &&
-        (latestKoramangalaReport || (madiwalaZone && madiwalaZone.status_label === "GREEN — PARTIALLY SAFE"))
+        (latestKoramangalaReport || (madiwalaZone && (madiwalaZone.priority === "YELLOW" || madiwalaZone.status_label === "GREEN — PARTIALLY SAFE")))
       ) {
         const photoHtml =
           latestKoramangalaReport && latestKoramangalaReport.has_photo && latestKoramangalaReport.photo_data
-            ? `<img src="${latestKoramangalaReport.photo_data}" alt="Reported crowd" class="w-full h-32 object-cover rounded-lg border border-sky-400/30 pointer-events-none" />`
+            ? `<img src="${latestKoramangalaReport.photo_data}" alt="Reported crowd" class="w-full h-32 object-cover rounded-lg border border-amber-400/35 pointer-events-none" />`
             : "";
         const summaryText = latestKoramangalaReport
           ? latestKoramangalaReport.ai_summary
@@ -1180,11 +1180,11 @@
         cardsHtml += `
           <div
             data-swipe-alert-key="${koramangalaKey}"
-            class="bg-slate-900/90 border-l-4 border-l-emerald-500 border border-sky-400/25 rounded-xl p-3.5 space-y-2 select-none cursor-grab active:cursor-grabbing"
+            class="bg-slate-900/90 border-l-4 border-l-amber-400 border border-amber-400/30 rounded-xl p-3.5 space-y-2 select-none cursor-grab active:cursor-grabbing"
           >
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-semibold text-white">Mild Congestion in Koramangala</span>
-              <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-600 text-white">Priority: Less • Be Careful</span>
+              <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-500 text-slate-950">Priority: Less • Be Careful</span>
             </div>
             ${photoHtml}
             <p class="text-xs font-medium text-sky-100/90 leading-relaxed">${summaryText}</p>

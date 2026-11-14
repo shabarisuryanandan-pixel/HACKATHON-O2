@@ -433,9 +433,14 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
 
     status_label = "GREEN — SAFE"
     if str(row.get("zone_id")) == "madiwala_koramangala":
-        priority = "GREEN"
-        status_label = "GREEN — PARTIALLY SAFE" if (manual_status == "PARTIALLY_SAFE" or reports > 0) else "GREEN — SAFE"
-        risk_score = 28
+        if manual_status == "PARTIALLY_SAFE" or reports > 0:
+            priority = "YELLOW"
+            status_label = "YELLOW — MILD CONGESTION"
+            risk_score = 58
+        else:
+            priority = "GREEN"
+            status_label = "GREEN — SAFE"
+            risk_score = 28
     elif manual_status == "PARTIALLY_SAFE":
         priority = "GREEN"
         status_label = "GREEN — PARTIALLY SAFE"
@@ -474,7 +479,7 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
             f"Stampede / severe choke-point risk active now ({blended_headcount} people in {width_m}m width). "
             f"Divert incoming traffic immediately."
         )
-    elif status_label == "GREEN — PARTIALLY SAFE":
+    elif status_label in ("GREEN — PARTIALLY SAFE", "YELLOW — MILD CONGESTION"):
         eta_minutes = 25
         prediction_text = (
             f"Mild congestion & traffic jam in Koramangala area ({blended_headcount}+ people). "

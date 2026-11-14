@@ -76,8 +76,8 @@ class TestBaseRoutes(unittest.TestCase):
         self.assertEqual(post_res.status_code, 200)
         body = post_res.json()
         self.assertEqual(body["status"], "published")
-        self.assertEqual(body["zone"]["priority"], "GREEN")
-        self.assertEqual(body["zone"]["status_label"], "GREEN — PARTIALLY SAFE")
+        self.assertEqual(body["zone"]["priority"], "YELLOW")
+        self.assertEqual(body["zone"]["status_label"], "YELLOW — MILD CONGESTION")
 
         state_res = self.client.get("/api/state?corridor=koramangala_madiwala")
         self.assertEqual(state_res.status_code, 200)

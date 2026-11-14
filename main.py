@@ -473,8 +473,8 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
     elif status_label == "GREEN — PARTIALLY SAFE":
         eta_minutes = 25
         prediction_text = (
-            f"Partially safe — Mild crowd buildup ({blended_headcount}+ people near {row['name']}). "
-            f"Monitor inflow; advise commuters to be careful."
+            f"Mild congestion & traffic jam in Koramangala area ({blended_headcount}+ people). "
+            f"Priority: Less (Partially Safe) — monitor inflow."
         )
     elif net_flow > 0 and priority == "YELLOW":
         eta_minutes = max(6, min(35, int(round(remaining_cap / max(net_flow, 1)))))
@@ -490,8 +490,8 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
         )
     elif priority == "YELLOW" or status_label == "GREEN — PARTIALLY SAFE":
         public_advisory = (
-            f"Mild crowd near {row['name']} ({blended_headcount}+ people in sector). "
-            f"Be careful — slow movement ahead; {row['alternate_route']}."
+            f"Mild congestion in Koramangala: Traffic jam reported near {row['name']} ({blended_headcount}+ people in sector). "
+            f"Priority: Less — Be careful; {row['alternate_route']}."
         )
     else:
         public_advisory = f"Clear movement at {row['name']}. Safe to travel."
@@ -728,7 +728,7 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
         clean_note = payload.note.strip() or "Mild crowd and traffic buildup observed via live camera"
         has_photo = 1 if (payload.photo_data and len(payload.photo_data) > 30) else 0
 
-        ai_level = "MILD CROWD"
+        ai_level = "PRIORITY LESS — MILD CONGESTION"
         new_reports_count = max(34, int(zone["citizen_reports"]) + 34)
         new_gps = max(680, int(zone["gps_headcount"]) + 160)
         new_cam = max(640, int(zone["camera_headcount"]) + 150)
@@ -736,8 +736,8 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
         new_speed = min(float(zone["speed_kmh"]), 12.5)
 
         ai_summary = (
-            f"Mild crowd near {zone['name']} ({new_gps}+ people in sector). "
-            f"Be careful — slow movement ahead; {zone['alternate_route']}."
+            "Mild congestion in Koramangala: Traffic jam and mild crowd buildup reported in the Koramangala — Madiwala area "
+            f"({new_gps}+ people in sector). Priority: Less (Partially Safe). Be careful — {zone['alternate_route']}."
         )
 
         new_manual_status = "PARTIALLY_SAFE" if payload.zone_id == "madiwala_koramangala" else zone["manual_status"]
@@ -773,12 +773,13 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
         n8n_payload = {
             "event": "4SIGHT_LIVE_CROWD_ALERT",
             "city": "Bengaluru",
+            "subject": "Mild congestion in Koramangala (Priority: Less)",
             "police_email_to": RUNTIME_N8N_WEBHOOK.get("police_email"),
             "zone_id": zone["zone_id"],
-            "zone_name": zone["name"],
+            "zone_name": "Mild congestion in Koramangala (Madiwala — Koramangala Area)",
             "area": zone["area"],
             "corridor": zone["corridor"],
-            "priority": enriched["status_label"],
+            "priority": "LOW — Priority Less (Partially Safe)",
             "risk_score": enriched["risk_score"],
             "confidence_pct": enriched["confidence_pct"],
             "ai_level": ai_level,
@@ -787,8 +788,8 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
             "gps_coordinates": f"{payload.gps_lat}, {payload.gps_lng}",
             "has_photo": bool(has_photo),
             "recommended_police_action": (
-                f"Zone marked {enriched['status_label']} ({new_reports_count} citizen reports, {new_gps} GPS count). "
-                f"Monitor junction and guide traffic toward {zone['alternate_route']}."
+                "Priority Less (Partially Safe): Mild congestion and traffic jam in the Koramangala area. "
+                f"Advisory sent to commuters to be careful and {zone['alternate_route']}."
             ),
             "timestamp": created_at,
         }

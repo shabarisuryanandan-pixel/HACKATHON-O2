@@ -690,6 +690,7 @@
             : "px-4 py-1.5 rounded-lg text-sky-100/80 hover:text-white transition-all";
         }
       });
+      refreshAllViews();
     }
 
     function switchDashboardSubtab(subtab) {
@@ -699,7 +700,7 @@
 
       document.getElementById("dash-subtab-main").className = isMain
         ? "px-4 py-1.5 text-xs font-semibold rounded-lg blue-pill-active transition-all"
-        : "px-4 py-1.5 text-xs font-semibold rounded-lg text-sky-100/80 hover:text-white bg-slate-900/40 border border-sky-400/20 transition-all";
+        : "px-4 py-1.5 text-xs font-semibold rounded-lg text-sky-100/40 hover:text-white bg-slate-900/40 border border-sky-400/20 transition-all";
 
       document.getElementById("dash-subtab-details").className = !isMain
         ? "px-4 py-1.5 text-xs font-semibold rounded-lg blue-pill-active transition-all"
@@ -722,6 +723,9 @@
             : "py-2.5 border-b-2 border-transparent text-sky-200/70 hover:text-white";
         }
       });
+      if (subtab === "alerts" || subtab === "chokepoints") {
+        refreshAllViews();
+      }
     }
 
     function statusBadgeHtml(zone) {
@@ -765,7 +769,9 @@
 
     async function refreshAllViews() {
       try {
-        const res = await fetch(`/api/state?corridor=${encodeURIComponent(currentCorridor)}`);
+        const res = await fetch(`/api/state?corridor=${encodeURIComponent(currentCorridor)}&t=${Date.now()}`, {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = await res.json();
         latestStateData = data;
@@ -779,6 +785,7 @@
 
     function renderPoliceDashboard(data) {
       const zones = data.zones || [];
+      const allReports = data.all_reports || [];
       const order = { RED: 0, YELLOW: 1, GREEN: 2 };
       const sortedZones = [...zones].sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
 
@@ -805,6 +812,11 @@
               : z.priority === "YELLOW"
               ? "border-l-4 border-l-amber-400"
               : "border-l-4 border-l-emerald-500";
+
+          const latestZonePhoto = allReports.find((r) => r.zone_id === z.zone_id && r.has_photo && r.photo_data);
+          const photoHtml = latestZonePhoto
+            ? `<img src="${latestZonePhoto.photo_data}" alt="Uploaded field report" class="mt-2.5 w-full h-28 object-cover rounded-lg border border-sky-400/30" />`
+            : "";
 
           return `
             <div
@@ -834,6 +846,7 @@
                     <span class="font-semibold text-white">${z.citizen_reports}</span>
                   </div>
                 </div>
+                ${photoHtml}
               </div>
 
               <div class="bg-slate-950/55 border border-sky-400/20 rounded-lg p-3 text-xs space-y-2">
@@ -1038,8 +1051,8 @@
         cardsHtml += `
           <div class="bg-sky-950/85 border border-sky-400/45 rounded-xl p-3.5 space-y-2">
             <div class="flex items-center justify-between gap-2">
-              <span class="text-xs font-semibold text-sky-300">Mild Crowd Alert Near Koramangala</span>
-              <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-600 text-white">Be Careful</span>
+              <span class="text-xs font-semibold text-sky-300">Mild Congestion in Koramangala</span>
+              <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-600 text-white">Priority: Less • Be Careful</span>
             </div>
             ${photoHtml}
             <p class="text-xs font-medium text-white leading-relaxed">${summaryText}</p>

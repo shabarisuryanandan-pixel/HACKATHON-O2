@@ -767,13 +767,23 @@
       reader.readAsDataURL(file);
     }
 
-    async function refreshAllViews() {
+    let lastStateSignature = "";
+
+    async function refreshAllViews(isBackground = false) {
       try {
         const res = await fetch(`/api/state?corridor=${encodeURIComponent(currentCorridor)}&t=${Date.now()}`, {
           cache: "no-store",
         });
         if (!res.ok) return;
         const data = await res.json();
+        const sig = JSON.stringify({
+          reports: (data.all_reports || []).map((r) => `${r.id}:${r.has_photo}`),
+          zones: (data.zones || []).map((z) => `${z.zone_id}:${z.status_label}:${z.citizen_reports}`),
+        });
+        if (isBackground && sig === lastStateSignature) {
+          return;
+        }
+        lastStateSignature = sig;
         latestStateData = data;
         renderPoliceDashboard(data);
         renderPhoneViews("phone1", data);
@@ -1152,7 +1162,8 @@
     }
 
     initLiveGps();
-    refreshAllViews();
+    refreshAllViews(false);
+    setInterval(() => refreshAllViews(true), 2500);
   </script>
 </body>
 </html>

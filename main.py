@@ -432,10 +432,14 @@ def compute_zone_intelligence(row: dict[str, object]) -> dict[str, object]:
     risk_score = max(5, min(99, int(round(raw_score))))
 
     status_label = "GREEN — SAFE"
-    if manual_status == "PARTIALLY_SAFE":
+    if str(row.get("zone_id")) == "madiwala_koramangala":
+        priority = "GREEN"
+        status_label = "GREEN — PARTIALLY SAFE" if (manual_status == "PARTIALLY_SAFE" or reports > 0) else "GREEN — SAFE"
+        risk_score = 28
+    elif manual_status == "PARTIALLY_SAFE":
         priority = "GREEN"
         status_label = "GREEN — PARTIALLY SAFE"
-        risk_score = max(35, min(risk_score, 48))
+        risk_score = max(25, min(risk_score, 40))
     elif manual_status in ("GREEN", "YELLOW", "RED"):
         priority = manual_status
         if priority == "GREEN":
@@ -729,11 +733,12 @@ def submit_public_report(payload: ReportCreate) -> dict[str, object]:
         has_photo = 1 if (payload.photo_data and len(payload.photo_data) > 30) else 0
 
         ai_level = "PRIORITY LESS — MILD CONGESTION"
-        new_reports_count = max(34, int(zone["citizen_reports"]) + 34)
-        new_gps = max(680, int(zone["gps_headcount"]) + 160)
-        new_cam = max(640, int(zone["camera_headcount"]) + 150)
-        new_inflow = int(zone["inflow_per_min"]) + 18
-        new_speed = min(float(zone["speed_kmh"]), 12.5)
+        current_rep = int(zone["citizen_reports"])
+        new_reports_count = 34 if current_rep < 34 else current_rep + 1
+        new_gps = 680 if payload.zone_id == "madiwala_koramangala" else int(zone["gps_headcount"]) + 120
+        new_cam = 640 if payload.zone_id == "madiwala_koramangala" else int(zone["camera_headcount"]) + 110
+        new_inflow = 56 if payload.zone_id == "madiwala_koramangala" else int(zone["inflow_per_min"]) + 15
+        new_speed = min(float(zone["speed_kmh"]), 14.0)
 
         ai_summary = (
             "Mild congestion in Koramangala: Traffic jam and mild crowd buildup reported in the Koramangala — Madiwala area "

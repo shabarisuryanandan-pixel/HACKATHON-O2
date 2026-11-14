@@ -394,21 +394,38 @@
 
                   <div>
                     <input
-                      id="phone1-photo-input"
+                      id="phone1-camera-input"
                       type="file"
                       accept="image/*"
                       capture="environment"
-                      onchange="handlePhotoPreview(this, 'phone1-photo-preview', 'phone1-click-label')"
+                      onchange="handlePhotoPreview(this, 'phone1-photo-preview', 'phone1-photo-status')"
                       class="hidden"
                     />
-                    <button
-                      type="button"
-                      onclick="document.getElementById('phone1-photo-input').click()"
-                      class="w-full py-3 px-4 rounded-xl border border-dashed border-sky-400/60 bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 font-semibold text-xs transition-all"
-                    >
-                      <span id="phone1-click-label">Click Photo</span>
-                    </button>
-                    <img id="phone1-photo-preview" alt="Captured preview" class="hidden mt-2.5 w-full h-36 object-cover rounded-lg border border-sky-400/30" />
+                    <input
+                      id="phone1-upload-input"
+                      type="file"
+                      accept="image/*"
+                      onchange="handlePhotoPreview(this, 'phone1-photo-preview', 'phone1-photo-status')"
+                      class="hidden"
+                    />
+                    <div class="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onclick="document.getElementById('phone1-camera-input').click()"
+                        class="py-3 px-3 rounded-xl border border-dashed border-sky-400/60 bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 font-semibold text-xs transition-all"
+                      >
+                        Click Photo
+                      </button>
+                      <button
+                        type="button"
+                        onclick="document.getElementById('phone1-upload-input').click()"
+                        class="py-3 px-3 rounded-xl border border-sky-400/40 bg-slate-800/70 hover:bg-slate-800 text-sky-100 font-semibold text-xs transition-all"
+                      >
+                        Upload Photo
+                      </button>
+                    </div>
+                    <p id="phone1-photo-status" class="mt-1.5 text-[11px] text-emerald-300 font-medium hidden"></p>
+                    <img id="phone1-photo-preview" alt="Captured preview" class="hidden mt-2 w-full h-36 object-cover rounded-lg border border-sky-400/30" />
                   </div>
 
                   <div>
@@ -578,21 +595,38 @@
 
               <div>
                 <input
-                  id="phone2-photo-input"
+                  id="phone2-camera-input"
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  onchange="handlePhotoPreview(this, 'phone2-photo-preview', 'phone2-click-label')"
+                  onchange="handlePhotoPreview(this, 'phone2-photo-preview', 'phone2-photo-status')"
                   class="hidden"
                 />
-                <button
-                  type="button"
-                  onclick="document.getElementById('phone2-photo-input').click()"
-                  class="w-full py-3.5 px-4 rounded-xl border border-dashed border-sky-400/60 bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 font-semibold text-xs transition-all"
-                >
-                  <span id="phone2-click-label">Click Photo</span>
-                </button>
-                <img id="phone2-photo-preview" alt="Captured preview" class="hidden mt-2.5 w-full h-44 object-cover rounded-lg border border-sky-400/30" />
+                <input
+                  id="phone2-upload-input"
+                  type="file"
+                  accept="image/*"
+                  onchange="handlePhotoPreview(this, 'phone2-photo-preview', 'phone2-photo-status')"
+                  class="hidden"
+                />
+                <div class="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onclick="document.getElementById('phone2-camera-input').click()"
+                    class="py-3.5 px-3 rounded-xl border border-dashed border-sky-400/60 bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 font-semibold text-xs transition-all"
+                  >
+                    Click Photo
+                  </button>
+                  <button
+                    type="button"
+                    onclick="document.getElementById('phone2-upload-input').click()"
+                    class="py-3.5 px-3 rounded-xl border border-sky-400/40 bg-slate-800/70 hover:bg-slate-800 text-sky-100 font-semibold text-xs transition-all"
+                  >
+                    Upload Photo
+                  </button>
+                </div>
+                <p id="phone2-photo-status" class="mt-1.5 text-[11px] text-emerald-300 font-medium hidden"></p>
+                <img id="phone2-photo-preview" alt="Captured preview" class="hidden mt-2 w-full h-44 object-cover rounded-lg border border-sky-400/30" />
               </div>
 
               <div>
@@ -759,7 +793,10 @@
           capturedPhotos[previewId] = compressedDataUrl;
           previewEl.src = compressedDataUrl;
           previewEl.classList.remove("hidden");
-          if (labelEl) labelEl.textContent = "Photo Captured — Tap to Retake";
+          if (labelEl) {
+            labelEl.textContent = "Photo Ready — Submit or Replace";
+            labelEl.classList.remove("hidden");
+          }
         };
         img.src = e.target.result;
       };

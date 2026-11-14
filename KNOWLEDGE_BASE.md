@@ -19,10 +19,12 @@ Why current systems fail:
 The system connects **ground-level public awareness** with **authority emergency dispatch** through a predictive risk engine.
 
 ### Side A: Authority Command Dashboard (Police, Fire, Venue Control)
-- Displays live **Red / Yellow / Green** priority status across all monitored zones and approach roads.
-- Shows **Predictive Warnings** ("Zone will reach Red in ~12 minutes at current inflow") before an accident happens.
-- Displays **Signal Confidence %** (how many independent sources agree) to prevent wasting units on false alarms.
-- Provides **1-Click Manual Overrides**: Acknowledge, Dispatch Unit, Open Relief Route, or Dismiss False Alarm, with a full audit log.
+- Displays live **Red / Yellow / Green** priority status across all monitored zones, gates, and approach roads.
+- **Pre-Event Readiness**: Loads scheduled match/event profiles in advance to pre-arm thresholds and position units before crowds arrive.
+- **Dynamic Police & Unit Reallocation**: Detects when police/marshals are stationed at quiet, low-risk entries (`GREEN`) and recommends moving them to overcrowded gates, potential fight/break-in hotspots, or accident zones (`YELLOW`/`RED`).
+- **Accident & Blockage Response**: Instantly flags major accidents, stalled vehicles, or public-reported road/construction blockages and dispatches emergency units + alternate routes.
+- Shows **Predictive Warnings** ("Zone will reach Red in ~12 minutes at current inflow") and **Signal Confidence %** (how many independent sources agree).
+- Provides **1-Click Manual Overrides**: Acknowledge, Dispatch/Reassign Unit, Open Relief Route, or Dismiss False Alarm, with a full audit log.
 
 ### Side B: Public Safety & Crowdsourced Portal (Citizens & Commuters)
 - **Zero-install browser/QR access** (plus future mobile app) so anyone at a venue or road junction can check safety or report an issue in under 15 seconds.
@@ -40,18 +42,20 @@ The system connects **ground-level public awareness** with **authority emergency
 2. **CCTV / Security Camera Density**: Automated or simulated headcount/density estimate from venue or traffic cameras.
 3. **Corroborated Public Reports**: Geo-zone reports submitted by citizens on the ground.
 
-### B. Additional Predictive & Context Variables
+### B. Additional Predictive, Geospatial & Context Variables
 4. **Inflow vs. Outflow Rate (Net Flow)**: People or vehicles entering per minute minus those exiting per minute. Sustained positive net flow predicts a crush or jam 10–20 minutes early.
-5. **Movement Speed / Stagnation Index**: Average walking or traffic speed. High density with near-zero movement indicates an active crush or gridlock.
-6. **Zone Safe Capacity (Bottleneck Geometry)**: Normalizes headcount against physical space (e.g., 500 people in an open plaza is Green; 500 people in a narrow 4-meter stadium gate is Red).
-7. **Scheduled Event & Peak-Hour Context**: Match end times, movie showtimes, or rush-hour windows that pre-raise sensitivity before a surge begins.
-8. **Environmental & Spillover Multipliers**: Rain/low-visibility flags (crowds shelter in narrow exits, traffic slows) and downstream choke-point spillover.
+5. **Movement Speed / Stagnation Index**: Average walking or traffic speed. High density with near-zero movement indicates an active crush, accident, or gridlock.
+6. **Road Width, Gate Width & Choke-Point Geometry**: Uses geospatial/map width metadata (lanes, road width in meters, narrow flyovers, stadium gate width) and public-reported construction/building blockages to compute true safe capacity.
+7. **Scheduled Event & Match Readiness**: Pre-loads match schedules, showtimes, and peak-hour windows so the system prepares capacity rules and unit placement before the event starts.
+8. **Incident Type & Environmental Multipliers**: Flags accidents, fights/break-in risks, rain/low visibility, and downstream choke-point spillover.
+9. **Active Police / Responder Deployment**: Tracks how many units are currently stationed in each zone to spot under-utilized units in `GREEN` zones that can be reallocated to `YELLOW`/`RED` zones.
 
 ### C. Engine Outputs per Zone
-- **Priority Level**: `GREEN` (Normal), `YELLOW` (Building Pressure / Caution), `RED` (Critical Crush or Severe Jam Risk)
+- **Priority Level**: `GREEN` (Normal), `YELLOW` (Building Pressure / Caution), `RED` (Critical Crush, Accident, or Severe Jam Risk)
 - **Risk Score**: `0` to `100`
 - **Confidence Score**: `0%` to `100%` based on multi-signal agreement (Camera + GPS + Citizen Reports)
 - **Estimated Time to Critical**: Projected minutes until `RED` if current net inflow continues
+- **Unit Reallocation Suggestion**: Plain-English recommendation (e.g., *"Move 2 units from Gate 1 (Green, 18% load) to Gate 3 (Red, 92% load)"*)
 - **Recommended Action**: Clear plain-English instruction for both authorities and the public
 
 ---

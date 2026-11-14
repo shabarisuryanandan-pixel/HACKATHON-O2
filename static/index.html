@@ -824,25 +824,7 @@
 
           const latestZonePhoto = allReports.find((r) => r.zone_id === z.zone_id && r.has_photo && r.photo_data);
           const photoHtml = latestZonePhoto
-            ? `
-              <div class="relative mt-2.5" onclick="event.stopPropagation()">
-                <img src="${latestZonePhoto.photo_data}" alt="Uploaded field report" class="w-full h-28 object-cover rounded-lg border border-sky-400/30" />
-                <button
-                  type="button"
-                  title="Delete uploaded alert & photo"
-                  onclick="triggerOverride('${z.zone_id}', 'dismiss_alert')"
-                  class="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-slate-950/85 hover:bg-rose-600 text-sky-100 hover:text-white border border-sky-400/30 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                    <path d="M10 11v6"></path>
-                    <path d="M14 11v6"></path>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                  </svg>
-                </button>
-              </div>
-            `
+            ? `<img src="${latestZonePhoto.photo_data}" alt="Uploaded field report" class="mt-2.5 w-full h-28 object-cover rounded-lg border border-sky-400/30" />`
             : "";
 
           return `
@@ -1053,11 +1035,87 @@
       });
     }
 
+    function getDeviceDismissedAlerts() {
+      try {
+        return JSON.parse(localStorage.getItem("4sight_dismissed_alerts") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function markAlertDismissedOnDevice(alertKey) {
+      const list = getDeviceDismissedAlerts();
+      if (!list.includes(alertKey)) {
+        list.push(alertKey);
+        try {
+          localStorage.setItem("4sight_dismissed_alerts", JSON.stringify(list));
+        } catch (e) {}
+      }
+    }
+
+    function attachSwipeRightHandlers(containerEl) {
+      if (!containerEl) return;
+      const cards = containerEl.querySelectorAll("[data-swipe-alert-key]");
+      cards.forEach((card) => {
+        let startX = null;
+        let currentX = 0;
+
+        const onStart = (clientX) => {
+          startX = clientX;
+          currentX = 0;
+          card.style.transition = "none";
+        };
+
+        const onMove = (clientX) => {
+          if (startX === null) return;
+          const dx = clientX - startX;
+          if (dx > 0) {
+            currentX = dx;
+            card.style.transform = `translateX(${dx}px)`;
+            card.style.opacity = String(Math.max(0.25, 1 - dx / 220));
+          }
+        };
+
+        const onEnd = () => {
+          if (startX === null) return;
+          startX = null;
+          if (currentX > 75) {
+            const key = card.getAttribute("data-swipe-alert-key");
+            card.style.transition = "transform 0.22s ease, opacity 0.22s ease";
+            card.style.transform = "translateX(110%)";
+            card.style.opacity = "0";
+            markAlertDismissedOnDevice(key);
+            setTimeout(() => {
+              card.outerHTML = `
+                <div class="bg-slate-900/80 border border-sky-400/30 rounded-xl px-3.5 py-2.5 text-center text-xs font-semibold text-sky-300">
+                  Alert Deleted
+                </div>
+              `;
+            }, 220);
+          } else {
+            card.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+            card.style.transform = "translateX(0)";
+            card.style.opacity = "1";
+          }
+        };
+
+        card.addEventListener("touchstart", (e) => onStart(e.touches[0].clientX), { passive: true });
+        card.addEventListener("touchmove", (e) => onMove(e.touches[0].clientX), { passive: true });
+        card.addEventListener("touchend", onEnd);
+
+        card.addEventListener("mousedown", (e) => onStart(e.clientX));
+        card.addEventListener("mousemove", (e) => onMove(e.clientX));
+        card.addEventListener("mouseup", onEnd);
+        card.addEventListener("mouseleave", onEnd);
+      });
+    }
+
     function renderPhoneViews(prefix, data) {
       const routeAlertsEl = document.getElementById(`${prefix}-route-alerts-list`);
       const allZonesEl = document.getElementById(`${prefix}-all-zones-list`);
       const corridorReports = data.corridor_reports || [];
       const zones = data.zones || [];
+      const dismissedKeys = getDeviceDismissedAlerts();
 
       const latestKoramangalaReport = corridorReports[0] || null;
       const madiwalaZone = zones.find((z) => z.zone_id === "madiwala_koramangala");
@@ -1065,48 +1123,47 @@
 
       let cardsHtml = "";
 
-      // Card 1: Single Unified Mild Crowd Alert Near Koramangala (when reported or active)
-      if (latestKoramangalaReport || (madiwalaZone && madiwalaZone.status_label === "GREEN — PARTIALLY SAFE")) {
+      const koramangalaKey = latestKoramangalaReport
+        ? `koramangala_report_${latestKoramangalaReport.id}`
+        : "koramangala_zone_active";
+
+      // Card 1: Single Unified Mild Crowd Alert Near Koramangala (when reported or active, unless swiped away on this device)
+      if (
+        !dismissedKeys.includes(koramangalaKey) &&
+        (latestKoramangalaReport || (madiwalaZone && madiwalaZone.status_label === "GREEN — PARTIALLY SAFE"))
+      ) {
         const photoHtml =
           latestKoramangalaReport && latestKoramangalaReport.has_photo && latestKoramangalaReport.photo_data
-            ? `<img src="${latestKoramangalaReport.photo_data}" alt="Reported crowd" class="w-full h-32 object-cover rounded-lg border border-sky-400/30" />`
+            ? `<img src="${latestKoramangalaReport.photo_data}" alt="Reported crowd" class="w-full h-32 object-cover rounded-lg border border-sky-400/30 pointer-events-none" />`
             : "";
         const summaryText = latestKoramangalaReport
           ? latestKoramangalaReport.ai_summary
           : madiwalaZone.public_advisory;
 
         cardsHtml += `
-          <div class="bg-slate-900/90 border-l-4 border-l-emerald-500 border border-sky-400/25 rounded-xl p-3.5 space-y-2">
+          <div
+            data-swipe-alert-key="${koramangalaKey}"
+            class="bg-slate-900/90 border-l-4 border-l-emerald-500 border border-sky-400/25 rounded-xl p-3.5 space-y-2 select-none cursor-grab active:cursor-grabbing"
+          >
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-semibold text-white">Mild Congestion in Koramangala</span>
-              <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-600 text-white">Priority: Less • Be Careful</span>
-                <button
-                  type="button"
-                  title="Delete alert"
-                  onclick="triggerOverride('madiwala_koramangala', 'dismiss_alert')"
-                  class="p-1 rounded bg-slate-800 hover:bg-rose-600 text-sky-200 hover:text-white border border-sky-400/25 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                    <path d="M10 11v6"></path>
-                    <path d="M14 11v6"></path>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                  </svg>
-                </button>
-              </div>
+              <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-600 text-white">Priority: Less • Be Careful</span>
             </div>
             ${photoHtml}
             <p class="text-xs font-medium text-sky-100/90 leading-relaxed">${summaryText}</p>
+            <p class="text-[10px] text-sky-300/60">Slide right to dismiss on this device</p>
           </div>
         `;
       }
 
-      // Card 2: Heavy Crowd Alert Near Silk Board (No Photo, Always Shown as Nearby Corridor Reference)
-      if (silkBoardZone) {
+      // Card 2: Heavy Crowd Alert Near Silk Board (No Photo, unless swiped away on this device)
+      const silkBoardKey = "silk_board_heavy_alert";
+      if (silkBoardZone && !dismissedKeys.includes(silkBoardKey)) {
         cardsHtml += `
-          <div class="bg-slate-900/90 border-l-4 border-l-rose-500 border border-sky-400/25 rounded-xl p-3.5 space-y-1.5">
+          <div
+            data-swipe-alert-key="${silkBoardKey}"
+            class="bg-slate-900/90 border-l-4 border-l-rose-500 border border-sky-400/25 rounded-xl p-3.5 space-y-1.5 select-none cursor-grab active:cursor-grabbing"
+          >
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-semibold text-white">Heavy Crowd Alert Near Silk Board</span>
               <span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-rose-600 text-white">Avoid Route</span>
@@ -1114,11 +1171,13 @@
             <p class="text-xs text-sky-100/90 leading-relaxed">
               Heavy crowd and 48-minute traffic jam at Silk Board Flyover Junction (${silkBoardZone.gps_headcount}+ people in sector). Do not go this way — ${silkBoardZone.alternate_route}.
             </p>
+            <p class="text-[10px] text-sky-300/60">Slide right to dismiss on this device</p>
           </div>
         `;
       }
 
       routeAlertsEl.innerHTML = cardsHtml;
+      attachSwipeRightHandlers(routeAlertsEl);
 
       if (allZonesEl) {
         allZonesEl.innerHTML = zones

@@ -1,0 +1,113 @@
+# Project Knowledge Base: CrowdGuard — Predictive Stampede & Severe Jam Early-Warning System
+
+> **Purpose**: This document is the single source of truth for the team so everyone can work in parallel across backend, frontend, demo scenarios, and the judge pitch.
+
+---
+
+## 1. Problem Statement
+Large public gatherings (stadium matches, theatre releases, festivals) and major urban choke points (such as Silk Board-style junctions) frequently escalate into **fatal stampedes** or **40–60 minute gridlocks**.
+
+Why current systems fail:
+1. **Reactive, not predictive**: Authorities only see a crisis after a crush or total gridlock has already formed.
+2. **Blind spots**: Official CCTV cameras do not cover every side street, gate, or approach road.
+3. **Unwarned inflow**: Incoming crowds and commuters keep walking or driving into a bottleneck because they have no real-time warning or alternate route guidance.
+4. **Unstructured citizen alerts**: People stuck in dangerous jams have no fast, trusted way to warn both nearby commuters and emergency responders simultaneously.
+
+---
+
+## 2. Solution Overview: Two-Sided Early-Warning Loop
+The system connects **ground-level public awareness** with **authority emergency dispatch** through a predictive risk engine.
+
+### Side A: Authority Command Dashboard (Police, Fire, Venue Control)
+- Displays live **Red / Yellow / Green** priority status across all monitored zones and approach roads.
+- Shows **Predictive Warnings** ("Zone will reach Red in ~12 minutes at current inflow") before an accident happens.
+- Displays **Signal Confidence %** (how many independent sources agree) to prevent wasting units on false alarms.
+- Provides **1-Click Manual Overrides**: Acknowledge, Dispatch Unit, Open Relief Route, or Dismiss False Alarm, with a full audit log.
+
+### Side B: Public Safety & Crowdsourced Portal (Citizens & Commuters)
+- **Zero-install browser/QR access** (plus future mobile app) so anyone at a venue or road junction can check safety or report an issue in under 15 seconds.
+- **Actionable Alerts**: Instead of vague warnings, users receive clear guidance:
+  - *"Avoid Silk Board Junction — 45 min gridlock reported. Take Alternate Route B."*
+  - *"Do NOT approach Gate 3 — High crowd crush risk. Use Gate 5 (Green)."*
+- **Live Crowd-Sourced Reporting**: Users stuck in a jam or dense crowd can submit a quick zone report (severity + short note + optional photo).
+
+---
+
+## 3. Predictive Risk Engine & Input Variables
+
+### A. Core Three Signals
+1. **Aggregated GPS / Mobility Headcount**: Anonymous count of active devices in the zone and moving toward the zone (similar to live traffic density).
+2. **CCTV / Security Camera Density**: Automated or simulated headcount/density estimate from venue or traffic cameras.
+3. **Corroborated Public Reports**: Geo-zone reports submitted by citizens on the ground.
+
+### B. Additional Predictive & Context Variables
+4. **Inflow vs. Outflow Rate (Net Flow)**: People or vehicles entering per minute minus those exiting per minute. Sustained positive net flow predicts a crush or jam 10–20 minutes early.
+5. **Movement Speed / Stagnation Index**: Average walking or traffic speed. High density with near-zero movement indicates an active crush or gridlock.
+6. **Zone Safe Capacity (Bottleneck Geometry)**: Normalizes headcount against physical space (e.g., 500 people in an open plaza is Green; 500 people in a narrow 4-meter stadium gate is Red).
+7. **Scheduled Event & Peak-Hour Context**: Match end times, movie showtimes, or rush-hour windows that pre-raise sensitivity before a surge begins.
+8. **Environmental & Spillover Multipliers**: Rain/low-visibility flags (crowds shelter in narrow exits, traffic slows) and downstream choke-point spillover.
+
+### C. Engine Outputs per Zone
+- **Priority Level**: `GREEN` (Normal), `YELLOW` (Building Pressure / Caution), `RED` (Critical Crush or Severe Jam Risk)
+- **Risk Score**: `0` to `100`
+- **Confidence Score**: `0%` to `100%` based on multi-signal agreement (Camera + GPS + Citizen Reports)
+- **Estimated Time to Critical**: Projected minutes until `RED` if current net inflow continues
+- **Recommended Action**: Clear plain-English instruction for both authorities and the public
+
+---
+
+## 4. Anti-Spam, Trust & Privacy-First Security
+
+### Preventing Fake Alarms & Panic
+- **Multi-Signal Corroboration**: A single citizen report never triggers a `RED` alert on its own; it opens a `Watch` state with low confidence until corroborated by 2–3+ independent reports, GPS density, or camera counts.
+- **Rate Limiting & Deduplication**: Multiple submissions from the same session/device within a short window count as one report.
+- **Human-in-the-Loop Override**: Police and fire operators can manually verify, escalate, or dismiss any alert at any time.
+
+### Privacy & Security Guardrails
+- **Zero Personal Tracking**: No individual GPS trails, phone numbers, or identities are stored. All mobility and camera counts are **aggregated at the zone level**.
+- **No Facial Recognition**: Camera inputs are treated strictly as anonymous headcount/density numbers.
+- **Authenticated Control Endpoints**: Authority overrides and sensor ingestion routes are separated from public reporting routes.
+
+---
+
+## 5. System Architecture & Tech Stack
+- **Backend**: Python + FastAPI + Uvicorn (`main.py`)
+- **Frontend**: HTML5 + Tailwind CSS + Vanilla JavaScript (`static/index.html`)
+- **Visualizations**: Interactive SVG Zone/Route Schematic + Chart.js (inflow vs. outflow & density trends)
+- **Persistence**: Supabase (persistent cloud database) + SQLite (fast local fallback/cache with parameterized queries)
+- **Automation (Optional)**: n8n webhooks for emergency/alert notifications
+- **Deployment**: GitHub (`main`) -> Render auto-deploy
+
+---
+
+## 6. Parallel Team Workstreams
+
+### Track 1: Backend & Risk Engine
+- Implement zone state store, predictive risk scoring function (`GREEN`/`YELLOW`/`RED` + `ETA to Red` + `Confidence %`), and anti-spam report deduplication.
+- Build API endpoints (`GET /api/zones`, `POST /api/reports`, `POST /api/sensors/ingest`, `POST /api/incidents/{id}/override`, `GET /api/analytics`).
+- Maintain `tests/test_app.py` with FastAPI `TestClient` checks ensuring all routes return HTTP 200.
+
+### Track 2: Frontend Command & Public Views
+- **Authority View**: Interactive SVG map of zones/gates/roads, Red/Yellow/Green live status cards, Chart.js trend graph, and manual dispatch/override controls.
+- **Public View**: Mobile-friendly alert banner (showing active Red/Yellow zones + alternate routes) and a 15-second report submission form.
+- Keep all tabs and views manual on click, typography clean and minimal, and zero emojis in UI or code.
+
+### Track 3: Demo Scenarios & Data Simulation
+- Prepare 3 realistic live demo presets (clickable from a Demo Control bar):
+  1. **Normal Flow (All Green)**: Baseline stadium/junction state.
+  2. **Early Warning (Gate 3 / Silk Board Surge)**: Rising GPS + inflow + 3 citizen reports -> turns Yellow/Red with 12-min warning and alternate route guidance.
+  3. **False Alarm Test**: 1 isolated citizen report with low GPS/camera density -> stays low-confidence Watch and can be dismissed by Police override.
+
+### Track 4: Pitch Deck & Judge Q&A
+- Prepare a 3-minute story around real incidents (Chinnaswamy/theatre rushes and Silk Board jams).
+- Highlight **early prevention via diversion**, **anti-spam multi-signal trust**, and **privacy-safe zone aggregation**.
+- Clearly state that camera/GPS feeds use an open ingestion API powered by simulated venue data for the hackathon demo.
+
+---
+
+## 7. Planned API Contract (Draft)
+- `GET /api/zones` — Current risk status, density, net inflow, confidence %, and alternate route for all zones.
+- `POST /api/reports` — Submit a public crowd/jam report for a zone (rate-limited, triggers corroboration check).
+- `POST /api/sensors/ingest` — Ingest updated camera count, GPS headcount, speed, and weather/event flags for a zone.
+- `POST /api/zones/{zone_id}/override` — Authority manual action (`acknowledge`, `dispatch`, `reroute`, `dismiss`).
+- `GET /api/analytics` — Time-series inflow/density data for Chart.js and recent audit log entries.
